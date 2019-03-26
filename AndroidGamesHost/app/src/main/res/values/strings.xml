@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AndroidGamesHost</string>
+    <string name="title_activity_multi_player_lobby">MultiPlayerLobbyActivity</string>
+    <string name="start">Start</string>
+</resources>

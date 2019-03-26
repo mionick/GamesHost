@@ -13,6 +13,9 @@
 bin/
 gen/
 out/
+dist/
+CardGames/MainSet/assets/cards/*
+CardGames/dist/*
 
 # Gradle files
 .gradle/

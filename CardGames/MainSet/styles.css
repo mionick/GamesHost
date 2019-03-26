@@ -1,0 +1,71 @@
+html {
+	width: 100vw;
+	height: 100vh;
+	margin: 0;
+	padding: 0;
+}
+body {
+	width: 100vw;
+	height: 100vh;
+	margin: 0;
+	padding: 0;
+	position: relative;
+	background-color: #000;
+	color: white;
+	text-align: center;
+	overflow: scroll;
+}
+input[type=checkbox] {
+	white-space: nowrap;
+}
+#event-message {
+	position: absolute;
+	width: 100%;
+	margin-top: -4em;
+	font-weight: 900;
+	font-size: 3em;
+	color: #FF3;
+	text-align: center;
+	font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+	z-index: 100;
+}
+.outline {
+    color: #fff;
+	text-shadow: 
+	#000 0px 0px 8px, 
+	#000 0px 0px 8px,
+	#000 0px 0px 8px,
+	#000 0px 0px 8px,
+	#000 0px 0px 8px,
+	#000 0px 0px 8px,
+	#000 0px 0px 8px,
+	#000 0px 0px 8px;
+    -webkit-font-smoothing: antialiased;
+}
+input {
+	padding: 0.4em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+	resize: vertical;
+	max-width: 80%;
+}
+button {
+	padding: 0.4em;
+    border: 1px solid #ccc;
+	border-radius: 4px;
+	background-color: #111;
+	color: white;
+}
+button:hover {
+	background-color: #333;
+}
+#registration {
+	text-align: center;
+	overflow: hidden;
+	margin-top: 1em;
+
+}
+dt, dd {
+	display: inline;
+}
