@@ -1,10 +1,8 @@
 import { Card } from "./card";
-
-declare var constants : any;
+import { constants } from "./constants";
 
 export class Field {
     
-    public isFaceUp : boolean = false;
     private cards : Card[] = [];
 
     // In pixels
@@ -13,9 +11,8 @@ export class Field {
     public width : number;
     public height : number = constants.CARD_HEIGHT;
     
-    constructor() {
+    constructor( public isFaceUp : boolean = false) {
     }
-
 
     public adjustCards() : void {
         // Could be negative, thats fine. Will squish cards.

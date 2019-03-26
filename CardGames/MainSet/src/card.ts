@@ -1,8 +1,9 @@
+import { CardInfo } from "./card-info";
+
 export class Card {
     constructor(
-        public id : number = null,
         public element : HTMLElement = null,
-        public cardName : string = null
+        public cardInfo : CardInfo
     ) {
     }
 }

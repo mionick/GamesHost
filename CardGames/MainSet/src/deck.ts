@@ -2,10 +2,9 @@ import { Card } from "./card";
 
 export class Deck {
     
-    public isFaceUp : boolean = false;
     private cards : Card[] = [];
-
-    constructor() {
+    
+    constructor( public isFaceUp : boolean = false) {
     }
 
 

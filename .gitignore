@@ -1,3 +1,9 @@
+CardGames/**/node_modules/*
+dist/
+CardGames/MainSet/src/assets/cards/*
+CardGames/dist/*
+
+
 # Built application files
 *.apk
 *.ap_
@@ -13,9 +19,6 @@
 bin/
 gen/
 out/
-dist/
-CardGames/MainSet/assets/cards/*
-CardGames/dist/*
 
 # Gradle files
 .gradle/

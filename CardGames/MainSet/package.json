@@ -1,0 +1,24 @@
+{
+  "name": "mainset",
+  "version": "1.0.0",
+  "description": "",
+  "main": "basic-dc-game.ts",
+  "scripts": {
+    "ng": "ng",
+    "start": "npm run package && lite-server",
+    "build": "ng build",
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e",
+    "buildForShip": "ng build --prod --output-hashing=none && npm run package",
+    "package": "npm run clean & tsc && browserify dist\\temp\\basic-dc-game.js -o dist\\main.js && echo D | xcopy .\\src\\assets .\\dist\\assets /E /Y && copy .\\src\\index.html .\\dist && copy .\\src\\styles.css .\\dist",
+    "clean": "rd /s /q dist"
+  },
+  "author": "Nicholas Mio",
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^16.2.3",
+    "lite-server": "^2.4.0",
+    "typescript": "^3.3.4000"
+  }
+}
