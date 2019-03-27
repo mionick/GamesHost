@@ -11,7 +11,7 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "buildForShip": "ng build --prod --output-hashing=none && npm run package",
-    "package": "npm run clean & tsc && browserify dist\\temp\\basic-dc-game.js -o dist\\main.js && echo D | xcopy .\\src\\assets .\\dist\\assets /E /Y && copy .\\src\\index.html .\\dist && copy .\\src\\styles.css .\\dist",
+    "package": "npm run clean & tsc && browserify --debug -p tsify src\\basic-dc-game.ts -o dist\\main.js && echo D | xcopy .\\src\\assets .\\dist\\assets /E /Y && copy .\\src\\index.html .\\dist && copy .\\src\\styles.css .\\dist",
     "clean": "rd /s /q dist"
   },
   "author": "Nicholas Mio",
@@ -20,5 +20,8 @@
     "browserify": "^16.2.3",
     "lite-server": "^2.4.0",
     "typescript": "^3.3.4000"
+  },
+  "dependencies": {
+    "tsify": "^4.0.1"
   }
 }

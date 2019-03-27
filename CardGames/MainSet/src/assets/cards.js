@@ -767,7 +767,7 @@ var CARD_LIST = [
    Ongoing: null,
    CardText: "+2 Power. Destroy up to two cards in your discard pile. FIRST APPEARANCE -- ATTACK: Each player puts a random card from his hand under his Super Hero. When this Villain is defeated, put each of those cards on top of its owner's deck.",
    Copies: null,
-   FileName: "Atroticus 10.jpeg"
+   FileName: "Atrocitus 10.jpeg"
  },
  {
    CardName: "Black Manta",
@@ -795,7 +795,7 @@ var CARD_LIST = [
    Ongoing: null,
    CardText: "Each foe reveals a random card from his hand. Play each revealed non-Location. FIRST APPEARANCE -- ATTACK: Each player chooses two cards from his hand and puts them on the table face down. Shuffle all of the chosen cards face down, then deal two back to each player at random.",
    Copies: null,
-   FileName: "Braniac 11,jpeg"
+   FileName: "Brainiac 11.jpeg"
  },
  {
    CardName: "Captain Cold",
@@ -949,7 +949,7 @@ var CARD_LIST = [
    Ongoing: null,
    CardText: "For each Villain you buy or gain during your turn, draw an extra card at the end of your turn.",
    Copies: null,
-   FileName: "Wonderwoman MC.jpeg"
+   FileName: "Wonder Woman MC.jpeg"
  },
  {
    CardName: "Green Lantern",
@@ -1036,7 +1036,7 @@ var CARD_LIST = [
    FileName: "Punch.jpeg"
  },
  {
-   CardName: "Vulnerability ",
+   CardName: "Vulnerability",
    CardType: "Starter",
    Cost: 0,
    VP: "0",
