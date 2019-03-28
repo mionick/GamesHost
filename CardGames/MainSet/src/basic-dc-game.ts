@@ -186,53 +186,91 @@ let mouseDownEvt: MouseEvent;
 let cardClicked: Card;
 let fieldFrom: CardContainer;
 
-table.addEventListener('mousedown', (event) => {
+function touchStart(event: any) {
    // Need to get 
    // 1) the card
    // 2) the field From
    mouseDownEvt = event;
-   let eles = document.elementsFromPoint(event.clientX, event.clientY);
-   cardClicked = cardIndex[parseInt(eles.find( x=> x.className === "card").id)]
-   fieldFrom = fieldIndex[parseInt(eles.find( x=> x.className === "field").id)]
-   cardClicked.element.classList.add('notransition')
-   console.log(cardClicked);
-});
-table.addEventListener('mousemove', (event) => {
    
-   if(mouseDownEvt && isDragEvent(mouseDownEvt, event)) {
+   let eles = document.elementsFromPoint(event.clientX, event.clientY);
+   let possibleCard = eles.find( x=> x.className === "card");
+   let possibleField = eles.find( x=> x.className === "field");
+
+   if (possibleCard && possibleField){
+      cardClicked = cardIndex[parseInt(possibleCard.id)]
+      fieldFrom = fieldIndex[parseInt(possibleField.id)]
+      cardClicked.element.classList.add('notransition')
+   }
+}
+
+function touchMove(event: any) {
+      
+   if(mouseDownEvt && cardClicked && isDragEvent(mouseDownEvt, event)) {
       cardClicked.element.style.transform = "translate(" + ( cardClicked.x - mouseDownEvt.pageX + event.pageX ) + "px," + ( cardClicked.y - mouseDownEvt.pageY + event.pageY ) + "px)";         
    }
-});
-table.addEventListener('mouseup', (event) => {
+}
+
+function touchEnd(event: any) {
+   if ( mouseDownEvt && cardClicked ) {
+
    cardClicked.element.classList.remove('notransition')
 
    if(isDragEvent(mouseDownEvt, event)) {
-         // TODO: pass event down to field underneath. Needs to take this card from the field or deck it's part of.
-         // If it's not added anywhere then it has to return somehow.
-         
-         let eles = document.elementsFromPoint(event.clientX, event.clientY);
-         let possibleField = eles.find( x=> x.className === "field");
-         if (possibleField) {
-            let fieldTo = fieldIndex[parseInt(possibleField.id)]
-            // Move card from one field to another.
-            if (fieldFrom != fieldTo){
-               fieldTo.addCard(fieldFrom.take(cardClicked.id))
+         let clientX = event.clientX || event.touches[0].clientX;
+         let clientY = event.clientY || event.touches[0].clientY;
+
+            let eles = document.elementsFromPoint(clientX, clientY);
+            let possibleField = eles.find( x=> x.className === "field");
+            if (possibleField) {
+               let fieldTo = fieldIndex[parseInt(possibleField.id)]
+               // Move card from one field to another.
+               if (fieldFrom != fieldTo){
+                  fieldTo.addCard(fieldFrom.take(cardClicked.id))
+               } else {
+                  cardClicked.element.style.transform = "translate(" + ( cardClicked.x ) + "px," + ( cardClicked.y ) + "px)";
+               }
             } else {
                cardClicked.element.style.transform = "translate(" + ( cardClicked.x ) + "px," + ( cardClicked.y ) + "px)";
             }
-         } else {
-            cardClicked.element.style.transform = "translate(" + ( cardClicked.x ) + "px," + ( cardClicked.y ) + "px)";
-         }
-   } else {
-         console.log('clicked on card:' + cardClicked.cardInfo.CardName);
-   }   
+      } else {
+            console.log('clicked on card:' + cardClicked.cardInfo.CardName);
+      }   
+   }
    mouseDownEvt = null;
-});
-table.ondragstart = function() { return false; };
-
-function isDragEvent(event1: MouseEvent, event2: MouseEvent) {
-   return Math.abs(event1.pageX - event2.pageX) > 5 || Math.abs(event1.pageY - event2.pageY) > 5;
+   cardClicked = null;
 }
 
+table.addEventListener('mousedown', (event) => {
+   touchStart(event);
+});
+table.addEventListener('mousemove', (event) => {
+   touchMove(event);
+});
+table.addEventListener('mouseup', (event) => {
+   touchEnd(event);
+});
+table.addEventListener('touchstart', (event) => {
+   touchStart(event);
+   event.preventDefault();
+});
+table.addEventListener('touchmove', (event) => {
+   touchMove(event);
+   event.preventDefault();
+});
+table.addEventListener('touchend', (event) => {
+   touchEnd(event);
+   event.preventDefault();
+});
 
+table.ondragstart = function() { return false; };
+
+function isDragEvent(event1: any, event2: any) {
+   let clientX1 = event1.clientX || event1.touches[0].clientX;
+   let clientY1 = event1.clientY || event1.touches[0].clientY;
+   let clientX2 = event2.clientX || event2.touches[0].clientX;
+   let clientY2 = event2.clientY || event2.touches[0].clientY;
+   return (
+      Math.abs(clientX1 - clientX2) > 5 || 
+      Math.abs(clientY1 - clientY2) > 5 );
+}
 
