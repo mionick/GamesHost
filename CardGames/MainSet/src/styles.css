@@ -28,12 +28,19 @@ input[type=checkbox] {
 	padding: 0;
 	margin: 0;
 	position: absolute;
-	border: #000 1px solid;
 	border-radius: 3%;
-	-webkit-transition: 1s ease-in-out;
-    -moz-transition: 1s ease-in-out;
-    -o-transition: 1s ease-in-out;
     transition: 1s ease-in-out;
+}
+.notransition {
+	-webkit-transition: none !important;
+	-moz-transition: none !important;
+	-o-transition: none !important;
+	transition: none !important;
+  }
+.field {
+	position: absolute;
+	background: rgba(0,0,0, 0.1);
+	border-radius: 3%;
 }
 #event-message {
 	position: absolute;

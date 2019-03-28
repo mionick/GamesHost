@@ -1,27 +1,48 @@
 import { Card } from "./card";
 import { constants } from "./constants";
+import { CardContainer } from "./card-container";
 
-export class Deck {
+export class Deck extends CardContainer {
+
+    constructor( public isFaceUp : boolean, table: HTMLElement, fieldIndex : CardContainer[]) {
+        
+        super();
+
+        this.w = constants.CARD_WIDTH;
+        this.h = constants.CARD_HEIGHT;
+           
+        let div = document.createElement("div");
+        div.id = fieldIndex.length + "";
+        fieldIndex.push(this);
+
+        div.classList.add("field")
+        div.style.width = this.w + "px";
+        div.style.height = this.h + "px";
     
-    public cards : Card[] = [];
+        this.element = div;
+        
+        // Add display element
+        if (table){
+            table.appendChild(div);
+        }
+    }
+    
 
-    // In pixels
-    public x : number = 0;
-    public y : number = 0;
-
-    constructor( public isFaceUp : boolean = false) {
+    /** Adds a card to the top of the deck */
+    public addCard(card : Card) : void{
+        this.cards.unshift(card);
+        this.adjustCards();
     }
 
-    public addCard(newCard : Card){
-        this.cards.push(newCard);
-    }
-
-    public addCardToTop(card : Card) {
+    public addCardToTop(card : Card) : void {
         this.cards.unshift(card);   
+        this.adjustCards();
+
     }
     
-    public addCardToBottom(card : Card) {
-        this.cards.push(card);   
+    public addCardToBottom(card : Card) : void {
+        this.cards.push(card);  
+        this.adjustCards();        
     }
 
     /**
@@ -43,8 +64,11 @@ export class Deck {
         // Could be negative, thats fine. Will squish cards.
         this.cards.forEach( (card, i) => {
             let height = (this.cards.length - i);
-            card.element.style.transform = "translate(" + ( this.x + height * constants.DECK_LEAN_X_FACTOR ) + "px," + ( this.y + height * constants.DECK_LEAN_Y_FACTOR ) + "px)";
-            card.element.style.zIndex = "" + height;
+            card.x = this.x + height * constants.DECK_LEAN_X_FACTOR;
+            card.y = this.y + height * constants.DECK_LEAN_Y_FACTOR;
+            card.element.style.transform = "translate(" + ( card.x ) + "px," + ( card.y ) + "px)";
+            card.element.style.zIndex = "" + (height + 1);
+            card.element.style.display = this.visible ? "block" : "none";
 
             if (this.isFaceUp){
                 card.setFaceUp();
@@ -57,13 +81,17 @@ export class Deck {
     }
 
     public draw() : Card {
-        return this.cards.shift();
+        let result = this.cards.shift();
+        this.adjustCards();
+        return result;
     }
 
-    public take(cardName: string) : Card {
+    public searchAndTake(cardName: string) : Card {
         let index = this.cards.findIndex( x => x.cardInfo.CardName === cardName);
 
-        return index < 0 ? null : this.cards.splice( index , 1 )[0];
+        let result = index < 0 ? null : this.cards.splice( index , 1 )[0];
+        this.adjustCards();
+        return result;
     }
 }
 
