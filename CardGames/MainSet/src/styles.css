@@ -47,7 +47,7 @@ input[type=checkbox] {
   }
 .field {
 	position: absolute;
-	background: rgba(0,0,0, 0.1);
+	background: #333;
 	border-radius: 3%;
 }
 #event-message {
@@ -157,4 +157,5 @@ dt, dd {
 /* The field will make the cards there darker. */
 #destroyed {
 	z-index: 500;
+	mix-blend-mode: saturation;
 }
