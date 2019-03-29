@@ -72,11 +72,25 @@ export class Field extends CardContainer {
 
     }
 
-    public addCard(newCard : Card){
-        if (newCard){
-            this.cards.push(newCard);
+    public addCard(card : Card){
+        if (card){
+            this.cards.push(card);
+            card.field = this;
             this.adjustCards();
         }
+    }
+
+    public getTouchedCard(x: number, y: number): Card {
+        // Cards z-index increase near the end of the array.
+        // So iterating backwards, retyrn the first card that contains the click will give the top card.
+
+        let card: Card = null;
+        for (let i = this.cards.length - 1; i > -1 && !card; i--) {
+            if (this.cards[i].contains(x, y)) {
+                card = this.cards[i];
+            }
+        }
+        return card;
     }
 
 }

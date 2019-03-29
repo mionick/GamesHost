@@ -31,17 +31,20 @@ export class Deck extends CardContainer {
     /** Adds a card to the top of the deck */
     public addCard(card : Card) : void{
         this.cards.unshift(card);
+        card.field = this;
         this.adjustCards();
     }
 
     public addCardToTop(card : Card) : void {
         this.cards.unshift(card);   
+        card.field = this;
         this.adjustCards();
 
     }
     
     public addCardToBottom(card : Card) : void {
         this.cards.push(card);  
+        card.field = this;
         this.adjustCards();        
     }
 
@@ -82,6 +85,9 @@ export class Deck extends CardContainer {
 
     public draw() : Card {
         let result = this.cards.shift();
+        if(result) {
+            result.field = null;
+        }
         this.adjustCards();
         return result;
     }
@@ -90,8 +96,26 @@ export class Deck extends CardContainer {
         let index = this.cards.findIndex( x => x.cardInfo.CardName === cardName);
 
         let result = index < 0 ? null : this.cards.splice( index , 1 )[0];
+        if(result) {
+            result.field = null;
+        }
         this.adjustCards();
         return result;
     }
+
+    public getTouchedCard(x: number, y: number): Card {
+        // Need to check the card too becsayse the decks can grow putside their bounds.
+        // There is a card, the touch was either on the deck or the top card, return the card.
+        
+        //return this.cards.length > 0 && (this.contains(x, y) || this.cards[0].contains(x, y)) && this.cards[0];
+
+        // The above is correct, but it leads to the possibility of clicking on a card and not clicking on  field.
+        // cards should know what field they belong too, should have to resolve card and field separately.
+        // simplifying for now.
+
+        return this.cards.length > 0 && (this.contains(x, y)) && this.cards[0];
+
+    }
+
 }
 

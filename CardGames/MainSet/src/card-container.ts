@@ -1,6 +1,7 @@
 import { Card } from "./card";
 
 export abstract class CardContainer {
+
     public cards : Card[] = [];
 
     // In pixels
@@ -40,10 +41,18 @@ export abstract class CardContainer {
         let index = this.cards.findIndex( x => x.id === id);
         let result =index < 0 ? null : this.cards.splice( index , 1 )[0];
         this.adjustCards();
+        if(result) {
+            result.field = null;
+        }
         return result;
     }
 
+    public isVisible(): boolean {
+        return this.visible;
+    }
+    
     abstract adjustCards() : void;    
     abstract addCard(card : Card): void;
+    abstract getTouchedCard(x: number, y: number): Card;
 
 }

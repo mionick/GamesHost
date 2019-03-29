@@ -7,8 +7,8 @@ export class constants {
     static NUM_VULNERABILITIES = 3;
     static HAND_SIZE = 5;
 
-    static DECK_LEAN_X_FACTOR = 0.3;
-    static DECK_LEAN_Y_FACTOR = 0.2;
+    static DECK_LEAN_X_FACTOR = 0.2;
+    static DECK_LEAN_Y_FACTOR = 0.1;
 
     static STARTING_VILLAIN = "Ra's al Ghul";
     static BACK_OF_CARD = "Back.jpg";

@@ -1,5 +1,6 @@
 import { CardInfo } from "./card-info";
 import { constants } from "./constants";
+import { CardContainer } from "./card-container";
 
 export class Card {
    
@@ -9,6 +10,8 @@ export class Card {
     public y = 0;
 
     private isFaceUp = true;
+
+    public field: CardContainer = null;
 
     constructor(
         public id: number = null,
@@ -44,5 +47,12 @@ export class Card {
     }
     public getText(): string {
         return this.isFaceUp ? this.cardInfo.CardText : "";
-     }
+    }
+
+    public contains(x: number, y : number) : boolean {
+        return (this.x < x && 
+        this.x + constants.CARD_WIDTH > x &&
+        this.y < y &&
+        this.y + constants.CARD_HEIGHT > y);
+    }
 }

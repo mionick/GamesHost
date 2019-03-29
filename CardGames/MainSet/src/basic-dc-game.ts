@@ -129,25 +129,6 @@ CARD_LIST.forEach((cardInfo, idx) => {
 });
 
 
-// Game Starts
-mainDeck.shuffle();
-villains.shuffle();
-superHeros.shuffle();
-villains.addCardToTop(villains.searchAndTake(constants.STARTING_VILLAIN))
-lineup.addCard(mainDeck.draw());
-lineup.addCard(mainDeck.draw());
-lineup.addCard(mainDeck.draw());
-lineup.addCard(mainDeck.draw());
-lineup.addCard(mainDeck.draw());
-
-lineup.adjustCards();
-villains.adjustCards();
-villains.cards[0].setFaceUp();
-
-mainDeck.adjustCards();
-weaknesses.adjustCards();
-kicks.adjustCards();
-
 // Position Fields
 // Center
 let rowY = constants.DEFAULT_SPACE;
@@ -198,32 +179,60 @@ players.forEach( (player, index) => {
    player.workArea.adjustCards();
 });
 
+// Game Starts
+mainDeck.shuffle();
+villains.shuffle();
+superHeros.shuffle();
+lineup.addCard(mainDeck.draw());
+lineup.addCard(mainDeck.draw());
+lineup.addCard(mainDeck.draw());
+lineup.addCard(mainDeck.draw());
+lineup.addCard(mainDeck.draw());
+
+lineup.adjustCards();
+villains.adjustCards();
+villains.addCardToTop(villains.searchAndTake(constants.STARTING_VILLAIN))
+villains.cards[0].setFaceUp();
+
+mainDeck.adjustCards();
+weaknesses.adjustCards();
+kicks.adjustCards();
+
+
+
 // Attatch event Listeners after setup
 let mouseDownEvt: MouseEvent;
 let cardClicked: Card;
-let fieldFrom: CardContainer;
+let selectedCards: Card[] = [];
+let isDrag = false;
 
 function touchStart(event: any) {
    // Need to get 
    // 1) the card
    // 2) the field From
    mouseDownEvt = event;
+   isDrag = false;
 
-   let eles = document.elementsFromPoint(event.clientX, event.clientY);
-   let possibleCard = eles.find( x=> x.className === "card");
-   let possibleField = eles.find( x=> x.className === "field");
+   cardClicked = getTouchedCard( event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top );
 
-   if (possibleCard && possibleField){
-      cardClicked = cardIndex[parseInt(possibleCard.id)]
-      fieldFrom = fieldIndex[parseInt(possibleField.id)]
+   if (cardClicked) {
       cardClicked.element.classList.add('notransition')
    }
+
+   setTimeout(() => {
+      if (mouseDownEvt && !isDrag) {
+         addToSelected(cardClicked.field.cards);
+      }
+   }, 700);
 }
 
 function touchMove(event: any) {
       
-   if(mouseDownEvt && cardClicked && isDragEvent(mouseDownEvt, event)) {
-      cardClicked.element.style.transform = "translate(" + ( cardClicked.x - mouseDownEvt.pageX + event.pageX ) + "px," + ( cardClicked.y - mouseDownEvt.pageY + event.pageY ) + "px)";         
+   if(mouseDownEvt && cardClicked) {
+      if (isDragEvent(mouseDownEvt, event)) {
+         cardClicked.element.style.transform = "translate(" + ( cardClicked.x - mouseDownEvt.pageX + event.pageX ) + "px," + ( cardClicked.y - mouseDownEvt.pageY + event.pageY ) + "px)";         
+         isDrag = true;
+      }
    }
 }
 
@@ -232,17 +241,28 @@ function touchEnd(event: any) {
 
    cardClicked.element.classList.remove('notransition')
 
-   if(isDragEvent(mouseDownEvt, event)) {
+   if(isDrag) {
          let clientX = event.clientX || event.touches[0].clientX;
          let clientY = event.clientY || event.touches[0].clientY;
 
-            let eles = document.elementsFromPoint(clientX, clientY);
-            let possibleField = eles.find( x=> x.className === "field");
-            if (possibleField) {
-               let fieldTo = fieldIndex[parseInt(possibleField.id)]
+            let fieldTo  = getTouchedField( event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top );
+
+            if (fieldTo) {
                // Move card from one field to another.
-               if (fieldFrom != fieldTo){
-                  fieldTo.addCard(fieldFrom.take(cardClicked.id))
+               if (cardClicked.field != fieldTo){
+                  if (selectedCards.indexOf(cardClicked) > -1) {
+                     // Put all selected cards there
+                     // TODO: take them from theirown field, deselect when dragging a non selected card. select all in field when se;ecting card.
+                     selectedCards.forEach(card => {
+                        fieldTo.addCard(card.field.take(card.id))
+                        card.element.classList.remove("selected-card");
+                     })                     
+                     selectedCards = [];
+
+                  } else{
+                     // put just that card.
+                     fieldTo.addCard(cardClicked.field.take(cardClicked.id))
+                  }
                } else {
                   cardClicked.element.style.transform = "translate(" + ( cardClicked.x ) + "px," + ( cardClicked.y ) + "px)";
                }
@@ -298,7 +318,7 @@ let previousPlayerButton = document.getElementById("previous-player");
 nextPlayerButton.addEventListener('click', () => {
    shownPlayersId = (shownPlayersId + 1) % players.length;
    players.forEach( (player, index) => {
-      player.setVisible(index === shownPlayersId);
+player.setVisible(index === shownPlayersId);
    })
 })
 
@@ -313,3 +333,35 @@ function showCardText(text : string) : void {
    (document.getElementById("event-log") as HTMLTextAreaElement).value = text;
 }
 
+function getTouchedField(x: number, y: number) : CardContainer{
+   let field: CardContainer = null;
+   // Search for the ONE field that was clicked on, if any.
+   for (let i = 0; i < fieldIndex.length && !field; i++) {
+      if(fieldIndex[i].isVisible() && fieldIndex[i].contains(x, y)) {
+         field = fieldIndex[i];
+      }
+   }
+   return field;
+}
+
+
+
+function getTouchedCard(x: number, y: number) : Card {
+   let card: Card = null;
+   // Search for the ONE field that was clicked on, if any.
+   for (let i = 0; i < fieldIndex.length && !card; i++) {
+      if(fieldIndex[i].isVisible()) {
+         card =  fieldIndex[i].getTouchedCard(x, y);
+      }
+   }
+   return card;
+}
+
+function addToSelected(cards: Card[]) {
+   // check if it was a long press
+   cards.forEach((card: Card) => {
+      card.element.classList.add("selected-card");
+      selectedCards.push(card);
+   })
+
+}

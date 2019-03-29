@@ -29,7 +29,15 @@ input[type=checkbox] {
 	margin: 0;
 	position: absolute;
 	border-radius: 3%;
-    transition: 0.5s ease-in-out;
+	transition: 0.3s ease-in-out;
+	transition-property: transform;
+	-webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
 }
 .notransition {
 	-webkit-transition: none !important;
@@ -123,4 +131,7 @@ dt, dd {
 	display: block;
 	width: 100%;
 	margin: auto;
+}
+.selected-card {
+	border: 2px solid yellow;
 }
