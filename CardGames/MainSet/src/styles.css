@@ -135,3 +135,26 @@ dt, dd {
 .selected-card {
 	border: 2px solid yellow;
 }
+#card-text {
+	text-align: center;
+	font-size: 1.5em;
+}
+#shuffle-button {
+	border-radius: 50%;
+	z-index: 1000;
+	position: absolute;
+	transition: 0.3s ease-in-out;
+	background: #FFF;
+	transition-property: transform;
+	-webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+/* The field will make the cards there darker. */
+#destroyed {
+	z-index: 500;
+}

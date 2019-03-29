@@ -9,7 +9,7 @@ export class Card {
     public x = 0;
     public y = 0;
 
-    private isFaceUp = true;
+    public isFaceUp = true;
 
     public field: CardContainer = null;
 

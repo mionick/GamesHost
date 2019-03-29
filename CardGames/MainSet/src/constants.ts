@@ -13,13 +13,17 @@ export class constants {
     static STARTING_VILLAIN = "Ra's al Ghul";
     static BACK_OF_CARD = "Back.jpg";
     static CARDS_FOLDER = "assets/cards/";
+    static SHUFFLE_ICON = "assets/shuffle.png";
 
 
     static DEFAULT_SPACING_FRACTION = 0.1;
     static DEFAULT_SPACE = 10; //PX
 
-    static WIDTH = 600;
-    static HEIGHT = 600;
+    static BODY_WIDTH = 600;
+    static BODY_HEIGHT = 600;
+
+    static TABLE_WIDTH = 600;
+    static TABLE_HEIGHT = 600;
 
     static CARD_WIDTH = 90;
     static CARD_HEIGHT = 100;
@@ -46,33 +50,36 @@ export class constants {
         // SET CONSTANTS
         let body = document.getElementById("body");
 
-        constants.WIDTH = body.offsetWidth;
-        constants.HEIGHT = body.offsetHeight;
+        constants.BODY_WIDTH = body.offsetWidth;
+        constants.BODY_HEIGHT = body.offsetHeight;
         // 7 cards, 8 spaces
 
-        constants.CARD_WIDTH = constants.WIDTH * (1 - constants.DEFAULT_SPACING_FRACTION) / 7;
+        constants.CARD_WIDTH = constants.BODY_WIDTH * (1 - constants.DEFAULT_SPACING_FRACTION) / 7;
         constants.CARD_HEIGHT = constants.CARD_WIDTH * constants.CARD_ASPECT_RATIO;
 
-        constants.DEFAULT_SPACE = constants.WIDTH * constants.DEFAULT_SPACING_FRACTION / 8; 
+        constants.DEFAULT_SPACE = constants.BODY_WIDTH * constants.DEFAULT_SPACING_FRACTION / 8; 
 
         // Those are the desired dimensions, but screen could be too wide. 
         // Need to scale everything down in that case.
-        let desiredHeight = 4 * this.CARD_HEIGHT + 5 * this.DEFAULT_SPACE; // want to show hand, work area, ongoing, and lineup.
+        this.TABLE_HEIGHT = 4 * this.CARD_HEIGHT + 5 * this.DEFAULT_SPACE; // want to show hand, work area, ongoing, and lineup.
 
-        if (desiredHeight > this.HEIGHT) {
+        if (this.TABLE_HEIGHT > this.BODY_HEIGHT) {
             // Need to scale down.
-            let scaleFactor = this.HEIGHT / desiredHeight;
+            let scaleFactor = this.BODY_HEIGHT / this.TABLE_HEIGHT;
             this.CARD_WIDTH = this.CARD_WIDTH * scaleFactor;
             this.CARD_HEIGHT = this.CARD_HEIGHT * scaleFactor;
             this.DEFAULT_SPACE = this.DEFAULT_SPACE * scaleFactor;
+            this.TABLE_HEIGHT = this.BODY_HEIGHT;
         }
 
+        this.TABLE_WIDTH = this.CARD_WIDTH * 7 + this.DEFAULT_SPACE * 8;
+        
         let table = document.createElement("div");
         table.id = "table";
         // Then with the adjusted card size, reset the width of table.
         let uiwrapper = document.getElementById("ui-wrapper");
         uiwrapper.style.width = this.CARD_WIDTH * 7 + this.DEFAULT_SPACE * 8 + "px";
-        table.style.width = this.CARD_WIDTH * 7 + this.DEFAULT_SPACE * 8 + "px";
+        table.style.width = this.TABLE_WIDTH + "px";
         uiwrapper.appendChild(table)
     }
 }

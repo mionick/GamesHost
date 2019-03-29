@@ -6,8 +6,13 @@ export class Field extends CardContainer {
 
     public size_in_cards = 5;
 
-    constructor( public isFaceUp : boolean, table: HTMLElement, fieldIndex : CardContainer[]) {
-        super();
+    constructor( 
+            public isFaceUp : boolean, 
+            table: HTMLElement, 
+            fieldIndex : CardContainer[],
+            name: string
+        ) {
+        super(name);
 
         let div = document.createElement("div");
 

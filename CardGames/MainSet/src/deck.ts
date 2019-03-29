@@ -4,9 +4,14 @@ import { CardContainer } from "./card-container";
 
 export class Deck extends CardContainer {
 
-    constructor( public isFaceUp : boolean, table: HTMLElement, fieldIndex : CardContainer[]) {
+    constructor( 
+            public isFaceUp : boolean, 
+            table: HTMLElement, 
+            fieldIndex : CardContainer[],
+            name: string
+        ) {
         
-        super();
+        super(name);
 
         this.w = constants.CARD_WIDTH;
         this.h = constants.CARD_HEIGHT;
@@ -60,6 +65,7 @@ export class Deck extends CardContainer {
             a[i] = a[j];
             a[j] = x;
         }
+        this.adjustCards();
     }
 
     

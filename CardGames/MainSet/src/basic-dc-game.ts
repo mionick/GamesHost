@@ -6,6 +6,7 @@ import { Field } from "./field";
 import { CardInfo } from "./card-info";
 import { Player } from "./player";
 import { CardContainer } from "./card-container";
+import { ShuffleTrigger } from "./shuffle-trigger";
 
 // CARD_LIST  defined as global object in assets/cards.js, loaded by index.html before this is run.
 declare var CARD_LIST: CardInfo[];
@@ -21,49 +22,54 @@ declare var CARD_LIST: CardInfo[];
     function reverse(s: string): string;
  */
 
- // constants are set based on the size of the start screen.
+// constants are set based on the size of the start screen.
 constants.initialize();
 
 let table = document.getElementById("table");
 
-let fieldIndex : CardContainer[] = [];
+let fieldIndex: CardContainer[] = [];
 
-let weaknesses = new Deck(true, table, fieldIndex);
-let kicks = new Deck(true, table, fieldIndex);
-let mainDeck = new Deck(false, table, fieldIndex);
-let destroyed = new Deck(true, table, fieldIndex);
-let villains = new Deck(false, table, fieldIndex);
-let lineup = new Field(true, table, fieldIndex);
-let superHeros = new Deck(true, table, fieldIndex);
+let weaknesses = new Deck(true, table, fieldIndex, "Weakness Stack");
+let kicks = new Deck(true, table, fieldIndex, "Kick Stack");
+let mainDeck = new Deck(false, table, fieldIndex, "Main Deck");
+let destroyed = new Deck(true, table, fieldIndex, "Destroyed Pile");
+let villains = new Deck(false, table, fieldIndex, "Super Villains Deck");
+let lineup = new Field(true, table, fieldIndex, "Line-Up");
+let superHeros = new Deck(true, table, fieldIndex, "Super Heros Deck");
 superHeros.setVisible(false);
+destroyed.element.id = "destroyed"
 
+//TODO: Host will listen for reistrations, 
+// choose who is playing, send back id, store ids in local storage in case refresh
+// and populate this list with correct names.
 
-
-let thisPlayer = new Player(table, fieldIndex);
-thisPlayer.name = "Nick";
+let playerNames = ["Nick", "Joel", "Qasim"];
 
 let playerId = 0; // TODO: this will be assigned by the host once the game starts.
 // Determines whose field is currently being displayed.
 let shownPlayersId = playerId;
 
-let players = [ thisPlayer, new Player(table, fieldIndex) ];
+let players: Player[] = [];
+playerNames.forEach((name, id) => {
+   players.push(new Player(table, fieldIndex, name, id));
+});
 
 
 // Provides an ordered lookup of every card created.
-let cardIndex : Card[] = [];
+let cardIndex: Card[] = [];
 
 
 
 // CARD_LIST  defined as global object in assets/cards.js, loaded by index.html before this is run.
 let idOffset = 0;
-CARD_LIST.forEach((cardInfo, idx) => {
+CARD_LIST.forEach((cardInfo) => {
    // Need to go through each card and assign it to the correct deck.
 
    // idOffset + idx will guarantee unique id, even when creating more than one of same card.
-   if (cardInfo.CardName === constants.CARD_NAMES.KICK){
-      for(let i = 0; i < constants.NUM_KICKS; i++){
-         let card = new Card(idOffset, cardInfo, table); 
-         kicks.addCard(card); 
+   if (cardInfo.CardName === constants.CARD_NAMES.KICK) {
+      for (let i = 0; i < constants.NUM_KICKS; i++) {
+         let card = new Card(idOffset, cardInfo, table);
+         kicks.addCard(card);
          cardIndex.push(card);
          idOffset++;
       }
@@ -71,45 +77,45 @@ CARD_LIST.forEach((cardInfo, idx) => {
       switch (cardInfo.CardType) {
          case constants.CARD_TYPES.SUPER_HERO: {
             // TODO: these cards are bigger. but they actually look fine at normal size. 
-            let card = new Card(idOffset, cardInfo, table); 
-            superHeros.addCard(card); 
+            let card = new Card(idOffset, cardInfo, table);
+            superHeros.addCard(card);
             cardIndex.push(card);
             idOffset++;
             break;
          }
          case constants.CARD_TYPES.SUPER_VILLAIN: {
-            let card = new Card(idOffset, cardInfo, table); 
-            villains.addCard(card); 
+            let card = new Card(idOffset, cardInfo, table);
+            villains.addCard(card);
             cardIndex.push(card);
             idOffset++;
             break;
          }
          case constants.CARD_TYPES.WEAKNESS: {
-            for(let i = 0; i < constants.NUM_WEAKNESSES; i++){
-               let card = new Card(idOffset, cardInfo, table); 
-               weaknesses.addCard(card); 
+            for (let i = 0; i < constants.NUM_WEAKNESSES; i++) {
+               let card = new Card(idOffset, cardInfo, table);
+               weaknesses.addCard(card);
                cardIndex.push(card);
                idOffset++;
             }
             break;
          }
          case constants.CARD_TYPES.STARTER: {
-            if (cardInfo.CardName === constants.CARD_NAMES.PUNCH){
+            if (cardInfo.CardName === constants.CARD_NAMES.PUNCH) {
                players.forEach(player => {
-                  for(let i = 0; i < constants.NUM_PUNCHES; i++){
-                     let card = new Card(idOffset, cardInfo, table); 
-                     player.deck.addCard(card); 
+                  for (let i = 0; i < constants.NUM_PUNCHES; i++) {
+                     let card = new Card(idOffset, cardInfo, table);
+                     player.deck.addCard(card);
                      cardIndex.push(card);
                      idOffset++;
                   }
                });
-               
+
             }
-            else if (cardInfo.CardName === constants.CARD_NAMES.VULNERABILITY){
+            else if (cardInfo.CardName === constants.CARD_NAMES.VULNERABILITY) {
                players.forEach(player => {
-                  for(let i = 0; i < constants.NUM_VULNERABILITIES; i++){
-                     let card = new Card(idOffset, cardInfo, table); 
-                     player.deck.addCard(card); 
+                  for (let i = 0; i < constants.NUM_VULNERABILITIES; i++) {
+                     let card = new Card(idOffset, cardInfo, table);
+                     player.deck.addCard(card);
                      cardIndex.push(card);
                      idOffset++;
                   }
@@ -117,9 +123,9 @@ CARD_LIST.forEach((cardInfo, idx) => {
             }
          }
          default: {
-            for(let i = 0; i < Number.parseInt(cardInfo.Copies || "0"); i++){
-               let card = new Card(idOffset, cardInfo, table); 
-               mainDeck.addCard(card); 
+            for (let i = 0; i < Number.parseInt(cardInfo.Copies || "0"); i++) {
+               let card = new Card(idOffset, cardInfo, table);
+               mainDeck.addCard(card);
                cardIndex.push(card);
                idOffset++;
             }
@@ -146,10 +152,17 @@ kicks.setXY(7 * constants.DEFAULT_SPACE + 6 * constants.CARD_WIDTH, rowY);
 rowY = constants.DEFAULT_SPACE * 3 + constants.CARD_HEIGHT * 2;
 destroyed.setXY(constants.DEFAULT_SPACE, rowY);
 
+let shuffleButton = new ShuffleTrigger(
+   -constants.CARD_WIDTH / 4,
+   rowY - constants.CARD_WIDTH / 4,
+   constants.CARD_WIDTH / 2,
+   table
+)
 
 
 
-players.forEach( (player, index) => {
+
+players.forEach((player, index) => {
    player.hand.isFaceUp = index == playerId;
    player.setVisible(index == playerId);
    player.superHeros.addCard(superHeros.draw());
@@ -198,88 +211,213 @@ mainDeck.adjustCards();
 weaknesses.adjustCards();
 kicks.adjustCards();
 
+// utility methods
+
+function isDragEvent(event1: any, event2: any) {
+   let clientX1 = event1.clientX || event1.touches[0].clientX;
+   let clientY1 = event1.clientY || event1.touches[0].clientY;
+   let clientX2 = event2.clientX || event2.touches[0].clientX;
+   let clientY2 = event2.clientY || event2.touches[0].clientY;
+   return (
+      Math.abs(clientX1 - clientX2) > 5 ||
+      Math.abs(clientY1 - clientY2) > 5);
+}
+
+let nextPlayerButton = document.getElementById("next-player");
+let previousPlayerButton = document.getElementById("previous-player");
+
+nextPlayerButton.addEventListener('click', () => {
+   shownPlayersId = (shownPlayersId + 1) % players.length;
+   players.forEach((player, index) => {
+      player.setVisible(index === shownPlayersId);
+   })
+   shuffleButton.setVisible(shownPlayersId === playerId);
+
+})
+
+previousPlayerButton.addEventListener('click', () => {
+   shownPlayersId = (shownPlayersId - 1) % players.length;
+   players.forEach((player, index) => {
+      player.setVisible(index === shownPlayersId);
+   })
+   shuffleButton.setVisible(shownPlayersId === playerId);
+})
+
+function showCardText(text: string): void {
+   (document.getElementById("card-text") as HTMLParagraphElement).textContent = text;
+}
+
+function getTouchedField(x: number, y: number): CardContainer {
+   let field: CardContainer = null;
+   // Search for the ONE field that was clicked on, if any.
+   for (let i = 0; i < fieldIndex.length && !field; i++) {
+      if (fieldIndex[i].isVisible() && fieldIndex[i].contains(x, y)) {
+         field = fieldIndex[i];
+      }
+   }
+   return field;
+}
 
 
-// Attatch event Listeners after setup
+
+function getTouchedCard(x: number, y: number): Card {
+   let card: Card = null;
+   // Search for the ONE field that was clicked on, if any.
+   for (let i = 0; i < fieldIndex.length && !card; i++) {
+      if (fieldIndex[i].isVisible()) {
+         card = fieldIndex[i].getTouchedCard(x, y);
+      }
+   }
+   return card;
+}
+
+function addToSelected(...cards: Card[]) {
+   // check if it was a long press
+   cards.forEach((card: Card) => {
+      card.element.classList.add("selected-card");
+      selectedCards.add(card);
+   })
+
+}
+
+function deselectAll(): void {
+   selectedCards.forEach(card => {
+      card.element.classList.remove("selected-card");
+   })
+   selectedCards.clear()
+}
+
+let mouseDownEvtForButton: MouseEvent;
+
+// ============================= EVENT LISTENERS FOR ACTION BUTTONS ==============================
+
+function startTouchingActionButton(event: any) {
+
+   mouseDownEvtForButton = event;
+   shuffleButton.element.classList.add('notransition')
+   event.stopPropagation();
+
+
+}
+shuffleButton.element.addEventListener("mousedown", startTouchingActionButton);
+
+// ================================== EVENT LISTENERS FOR CARDS ==================================
+
 let mouseDownEvt: MouseEvent;
 let cardClicked: Card;
-let selectedCards: Card[] = [];
+let selectedCards = new Set<Card>();
 let isDrag = false;
 
+function doubleTap(event: MouseEvent) {
+   cardClicked = getTouchedCard(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
+
+   if (cardClicked) {
+      cardClicked.isFaceUp ? cardClicked.setFaceDown() : cardClicked.setFaceUp();
+   }
+}
+
 function touchStart(event: any) {
+
    // Need to get 
    // 1) the card
    // 2) the field From
    mouseDownEvt = event;
    isDrag = false;
 
-   cardClicked = getTouchedCard( event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top );
+   cardClicked = getTouchedCard(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
+
+   if (!selectedCards.has(cardClicked)) {
+      deselectAll();
+   }
 
    if (cardClicked) {
+      addToSelected(cardClicked);
       cardClicked.element.classList.add('notransition')
    }
 
    setTimeout(() => {
       if (mouseDownEvt && !isDrag) {
-         addToSelected(cardClicked.field.cards);
+         selectedCards.clear();
+         addToSelected(...cardClicked.field.cards);
       }
-   }, 700);
+   }, 600);
 }
 
 function touchMove(event: any) {
-      
-   if(mouseDownEvt && cardClicked) {
+
+   if (mouseDownEvtForButton) {
+      shuffleButton.element.style.transform = "translate(" + (shuffleButton.x - mouseDownEvtForButton.pageX + event.pageX) + "px," + (shuffleButton.y - mouseDownEvtForButton.pageY + event.pageY) + "px)";
+   }
+
+   if (mouseDownEvt && cardClicked) {
       if (isDragEvent(mouseDownEvt, event)) {
-         cardClicked.element.style.transform = "translate(" + ( cardClicked.x - mouseDownEvt.pageX + event.pageX ) + "px," + ( cardClicked.y - mouseDownEvt.pageY + event.pageY ) + "px)";         
+         cardClicked.element.style.transform = "translate(" + (cardClicked.x - mouseDownEvt.pageX + event.pageX) + "px," + (cardClicked.y - mouseDownEvt.pageY + event.pageY) + "px)";
          isDrag = true;
       }
    }
 }
 
 function touchEnd(event: any) {
-   if ( mouseDownEvt && cardClicked ) {
 
-   cardClicked.element.classList.remove('notransition')
+   //Ending Action For Buttons
+   if (mouseDownEvtForButton) {
+      shuffleButton.element.style.transform = "translate(" + (shuffleButton.x) + "px," + (shuffleButton.y) + "px)";
+      let fieldTo = getTouchedField(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
+      if (fieldTo instanceof Deck) {
+         fieldTo.shuffle();
+      }
+      shuffleButton.element.classList.remove('notransition')
+      mouseDownEvtForButton = null;
+   }
 
-   if(isDrag) {
+   // Ending Action for Cards
+   if (mouseDownEvt && cardClicked) {
+
+      cardClicked.element.classList.remove('notransition')
+
+      if (isDrag) {
          let clientX = event.clientX || event.touches[0].clientX;
          let clientY = event.clientY || event.touches[0].clientY;
 
-            let fieldTo  = getTouchedField( event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top );
+         let fieldTo = getTouchedField(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
 
-            if (fieldTo) {
-               // Move card from one field to another.
-               if (cardClicked.field != fieldTo){
-                  if (selectedCards.indexOf(cardClicked) > -1) {
-                     // Put all selected cards there
-                     // TODO: take them from theirown field, deselect when dragging a non selected card. select all in field when se;ecting card.
-                     selectedCards.forEach(card => {
-                        fieldTo.addCard(card.field.take(card.id))
-                        card.element.classList.remove("selected-card");
-                     })                     
-                     selectedCards = [];
+         if (fieldTo) {
+            // Move card from one field to another.
+            if (cardClicked.field != fieldTo) {
+               if (selectedCards.has(cardClicked)) {
+                  // Put all selected cards there
+                  selectedCards.forEach(card => {
+                     fieldTo.addCard(card.field.take(card.id))
+                  })
+                  deselectAll();
 
-                  } else{
-                     // put just that card.
-                     fieldTo.addCard(cardClicked.field.take(cardClicked.id))
-                  }
                } else {
-                  cardClicked.element.style.transform = "translate(" + ( cardClicked.x ) + "px," + ( cardClicked.y ) + "px)";
+                  // put just that card.
+                  fieldTo.addCard(cardClicked.field.take(cardClicked.id))
                }
             } else {
-               cardClicked.element.style.transform = "translate(" + ( cardClicked.x ) + "px," + ( cardClicked.y ) + "px)";
+               cardClicked.element.style.transform = "translate(" + (cardClicked.x) + "px," + (cardClicked.y) + "px)";
             }
+         } else {
+            cardClicked.element.style.transform = "translate(" + (cardClicked.x) + "px," + (cardClicked.y) + "px)";
+         }
       } else {
-            console.log('clicked on card:' + cardClicked.cardInfo.CardName);
-            showCardText(cardClicked.getText());
-      }   
+         console.log('clicked on card:' + cardClicked.cardInfo.CardName);
+         showCardText(cardClicked.getText());
+      }
    }
    mouseDownEvt = null;
    cardClicked = null;
 }
 
+// TODO: not sure if needed. come back when doing mobile events
+table.ondragstart = function () { return false; };
+
 table.addEventListener('mousedown', (event) => {
    touchStart(event);
+});
+table.addEventListener('dblclick', (event) => {
+   doubleTap(event);
 });
 table.addEventListener('mousemove', (event) => {
    touchMove(event);
@@ -299,69 +437,3 @@ table.addEventListener('touchend', (event) => {
    touchEnd(event);
    event.preventDefault();
 });
-
-table.ondragstart = function() { return false; };
-
-function isDragEvent(event1: any, event2: any) {
-   let clientX1 = event1.clientX || event1.touches[0].clientX;
-   let clientY1 = event1.clientY || event1.touches[0].clientY;
-   let clientX2 = event2.clientX || event2.touches[0].clientX;
-   let clientY2 = event2.clientY || event2.touches[0].clientY;
-   return (
-      Math.abs(clientX1 - clientX2) > 5 || 
-      Math.abs(clientY1 - clientY2) > 5 );
-}
-
-let nextPlayerButton = document.getElementById("next-player");
-let previousPlayerButton = document.getElementById("previous-player");
-
-nextPlayerButton.addEventListener('click', () => {
-   shownPlayersId = (shownPlayersId + 1) % players.length;
-   players.forEach( (player, index) => {
-player.setVisible(index === shownPlayersId);
-   })
-})
-
-previousPlayerButton.addEventListener('click', () => {
-   shownPlayersId = (shownPlayersId - 1) % players.length;
-   players.forEach( (player, index) => {
-      player.setVisible(index === shownPlayersId);
-   })
-})
-
-function showCardText(text : string) : void {
-   (document.getElementById("event-log") as HTMLTextAreaElement).value = text;
-}
-
-function getTouchedField(x: number, y: number) : CardContainer{
-   let field: CardContainer = null;
-   // Search for the ONE field that was clicked on, if any.
-   for (let i = 0; i < fieldIndex.length && !field; i++) {
-      if(fieldIndex[i].isVisible() && fieldIndex[i].contains(x, y)) {
-         field = fieldIndex[i];
-      }
-   }
-   return field;
-}
-
-
-
-function getTouchedCard(x: number, y: number) : Card {
-   let card: Card = null;
-   // Search for the ONE field that was clicked on, if any.
-   for (let i = 0; i < fieldIndex.length && !card; i++) {
-      if(fieldIndex[i].isVisible()) {
-         card =  fieldIndex[i].getTouchedCard(x, y);
-      }
-   }
-   return card;
-}
-
-function addToSelected(cards: Card[]) {
-   // check if it was a long press
-   cards.forEach((card: Card) => {
-      card.element.classList.add("selected-card");
-      selectedCards.push(card);
-   })
-
-}
