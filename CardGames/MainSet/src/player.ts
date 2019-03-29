@@ -29,4 +29,13 @@ export class Player {
             this.hand.addCard(this.deck.draw());
         }
     }
+
+    public setVisible(vis : boolean) {
+        this.superHeros.setVisible(vis);
+        this.discard.setVisible(vis);
+        this.deck.setVisible(vis);
+        this.hand.setVisible(vis);
+        this.workArea.setVisible(vis);
+        this.ongoing.setVisible(vis); 
+    }
 }

@@ -7,8 +7,8 @@ export class constants {
     static NUM_VULNERABILITIES = 3;
     static HAND_SIZE = 5;
 
-    static DECK_LEAN_X_FACTOR = 0.5;
-    static DECK_LEAN_Y_FACTOR = 0.3;
+    static DECK_LEAN_X_FACTOR = 0.3;
+    static DECK_LEAN_Y_FACTOR = 0.2;
 
     static STARTING_VILLAIN = "Ra's al Ghul";
     static BACK_OF_CARD = "Back.jpg";
@@ -44,10 +44,10 @@ export class constants {
 
     public static initialize(): void {
         // SET CONSTANTS
-        let table = document.getElementById("table");
+        let body = document.getElementById("body");
 
-        constants.WIDTH = table.offsetWidth;
-        constants.HEIGHT = table.offsetHeight;
+        constants.WIDTH = body.offsetWidth;
+        constants.HEIGHT = body.offsetHeight;
         // 7 cards, 8 spaces
 
         constants.CARD_WIDTH = constants.WIDTH * (1 - constants.DEFAULT_SPACING_FRACTION) / 7;
@@ -67,5 +67,12 @@ export class constants {
             this.DEFAULT_SPACE = this.DEFAULT_SPACE * scaleFactor;
         }
 
+        let table = document.createElement("div");
+        table.id = "table";
+        // Then with the adjusted card size, reset the width of table.
+        let uiwrapper = document.getElementById("ui-wrapper");
+        uiwrapper.style.width = this.CARD_WIDTH * 7 + this.DEFAULT_SPACE * 8 + "px";
+        table.style.width = this.CARD_WIDTH * 7 + this.DEFAULT_SPACE * 8 + "px";
+        uiwrapper.appendChild(table)
     }
 }

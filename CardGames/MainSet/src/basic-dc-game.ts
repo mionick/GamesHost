@@ -34,43 +34,20 @@ let mainDeck = new Deck(false, table, fieldIndex);
 let destroyed = new Deck(true, table, fieldIndex);
 let villains = new Deck(false, table, fieldIndex);
 let lineup = new Field(true, table, fieldIndex);
-let superHeros = new Field(true, table, fieldIndex);
+let superHeros = new Deck(true, table, fieldIndex);
 superHeros.setVisible(false);
 
 
 
 let thisPlayer = new Player(table, fieldIndex);
+thisPlayer.name = "Nick";
 
-let players = [ thisPlayer ];
+let playerId = 0; // TODO: this will be assigned by the host once the game starts.
+// Determines whose field is currently being displayed.
+let shownPlayersId = playerId;
 
+let players = [ thisPlayer, new Player(table, fieldIndex) ];
 
-
-// Position Fields
-// Center
-let rowY = constants.DEFAULT_SPACE;
-
-villains.setXY(constants.DEFAULT_SPACE, rowY);
-lineup.setXY(2 * constants.DEFAULT_SPACE + constants.CARD_WIDTH, rowY);
-mainDeck.setXY(7 * constants.DEFAULT_SPACE + 6 * constants.CARD_WIDTH, rowY);
-
-// Second
-rowY = constants.DEFAULT_SPACE * 2 + constants.CARD_HEIGHT;
-weaknesses.setXY(constants.DEFAULT_SPACE, rowY);
-thisPlayer.ongoing.setXY(2 * constants.DEFAULT_SPACE + constants.CARD_WIDTH, rowY);
-kicks.setXY(7 * constants.DEFAULT_SPACE + 6 * constants.CARD_WIDTH, rowY);
-
-// Third
-rowY = constants.DEFAULT_SPACE * 3 + constants.CARD_HEIGHT * 2;
-
-destroyed.setXY(constants.DEFAULT_SPACE, rowY);
-thisPlayer.workArea.setXY(2 * constants.DEFAULT_SPACE + constants.CARD_WIDTH, rowY);
-thisPlayer.superHeros.setXY(7 * constants.DEFAULT_SPACE + 6 * constants.CARD_WIDTH, rowY);
-
-// Fourth row
-rowY = constants.DEFAULT_SPACE * 4 + constants.CARD_HEIGHT * 3;
-thisPlayer.discard.setXY(constants.DEFAULT_SPACE, rowY);
-thisPlayer.hand.setXY(2 * constants.DEFAULT_SPACE + constants.CARD_WIDTH, rowY);
-thisPlayer.deck.setXY(7 * constants.DEFAULT_SPACE + 6 * constants.CARD_WIDTH, rowY);
 
 // Provides an ordered lookup of every card created.
 let cardIndex : Card[] = [];
@@ -95,7 +72,7 @@ CARD_LIST.forEach((cardInfo, idx) => {
          case constants.CARD_TYPES.SUPER_HERO: {
             // TODO: these cards are bigger. but they actually look fine at normal size. 
             let card = new Card(idOffset, cardInfo, table); 
-            thisPlayer.superHeros.addCard(card); 
+            superHeros.addCard(card); 
             cardIndex.push(card);
             idOffset++;
             break;
@@ -155,6 +132,7 @@ CARD_LIST.forEach((cardInfo, idx) => {
 // Game Starts
 mainDeck.shuffle();
 villains.shuffle();
+superHeros.shuffle();
 villains.addCardToTop(villains.searchAndTake(constants.STARTING_VILLAIN))
 lineup.addCard(mainDeck.draw());
 lineup.addCard(mainDeck.draw());
@@ -170,7 +148,46 @@ mainDeck.adjustCards();
 weaknesses.adjustCards();
 kicks.adjustCards();
 
-players.forEach(player => {
+// Position Fields
+// Center
+let rowY = constants.DEFAULT_SPACE;
+
+villains.setXY(constants.DEFAULT_SPACE, rowY);
+lineup.setXY(2 * constants.DEFAULT_SPACE + constants.CARD_WIDTH, rowY);
+mainDeck.setXY(7 * constants.DEFAULT_SPACE + 6 * constants.CARD_WIDTH, rowY);
+
+// Second
+rowY = constants.DEFAULT_SPACE * 2 + constants.CARD_HEIGHT;
+weaknesses.setXY(constants.DEFAULT_SPACE, rowY);
+kicks.setXY(7 * constants.DEFAULT_SPACE + 6 * constants.CARD_WIDTH, rowY);
+
+// Third
+rowY = constants.DEFAULT_SPACE * 3 + constants.CARD_HEIGHT * 2;
+destroyed.setXY(constants.DEFAULT_SPACE, rowY);
+
+
+
+
+players.forEach( (player, index) => {
+   player.hand.isFaceUp = index == playerId;
+   player.setVisible(index == playerId);
+   player.superHeros.addCard(superHeros.draw());
+
+   // Second 
+   rowY = constants.DEFAULT_SPACE * 2 + constants.CARD_HEIGHT;
+   player.ongoing.setXY(2 * constants.DEFAULT_SPACE + constants.CARD_WIDTH, rowY);
+
+   // Third
+   rowY = constants.DEFAULT_SPACE * 3 + constants.CARD_HEIGHT * 2;
+   player.workArea.setXY(2 * constants.DEFAULT_SPACE + constants.CARD_WIDTH, rowY);
+   player.superHeros.setXY(7 * constants.DEFAULT_SPACE + 6 * constants.CARD_WIDTH, rowY);
+
+   // Fourth row
+   rowY = constants.DEFAULT_SPACE * 4 + constants.CARD_HEIGHT * 3;
+   player.discard.setXY(constants.DEFAULT_SPACE, rowY);
+   player.hand.setXY(2 * constants.DEFAULT_SPACE + constants.CARD_WIDTH, rowY);
+   player.deck.setXY(7 * constants.DEFAULT_SPACE + 6 * constants.CARD_WIDTH, rowY);
+
    player.deck.shuffle();
    player.drawHand();
    player.hand.adjustCards();
@@ -191,7 +208,7 @@ function touchStart(event: any) {
    // 1) the card
    // 2) the field From
    mouseDownEvt = event;
-   
+
    let eles = document.elementsFromPoint(event.clientX, event.clientY);
    let possibleCard = eles.find( x=> x.className === "card");
    let possibleField = eles.find( x=> x.className === "field");
@@ -234,6 +251,7 @@ function touchEnd(event: any) {
             }
       } else {
             console.log('clicked on card:' + cardClicked.cardInfo.CardName);
+            showCardText(cardClicked.getText());
       }   
    }
    mouseDownEvt = null;
@@ -272,5 +290,26 @@ function isDragEvent(event1: any, event2: any) {
    return (
       Math.abs(clientX1 - clientX2) > 5 || 
       Math.abs(clientY1 - clientY2) > 5 );
+}
+
+let nextPlayerButton = document.getElementById("next-player");
+let previousPlayerButton = document.getElementById("previous-player");
+
+nextPlayerButton.addEventListener('click', () => {
+   shownPlayersId = (shownPlayersId + 1) % players.length;
+   players.forEach( (player, index) => {
+      player.setVisible(index === shownPlayersId);
+   })
+})
+
+previousPlayerButton.addEventListener('click', () => {
+   shownPlayersId = (shownPlayersId - 1) % players.length;
+   players.forEach( (player, index) => {
+      player.setVisible(index === shownPlayersId);
+   })
+})
+
+function showCardText(text : string) : void {
+   (document.getElementById("event-log") as HTMLTextAreaElement).value = text;
 }
 

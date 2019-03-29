@@ -1045,7 +1045,7 @@ var CARD_LIST = [
    Draw: null,
    Destroy: null,
    Ongoing: null,
-   CardText: null,
+   CardText: "(No effect.)",
    Copies: null,
    FileName: "Vulnerability.jpeg"
  },
@@ -1059,7 +1059,7 @@ var CARD_LIST = [
    Draw: null,
    Destroy: null,
    Ongoing: null,
-   CardText: null,
+   CardText: "Weakness cards reduce your score at the end of the game.",
    Copies: null,
    FileName: "Weakness.jpeg"
  }

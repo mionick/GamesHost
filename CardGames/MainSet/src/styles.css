@@ -19,9 +19,9 @@ input[type=checkbox] {
 	white-space: nowrap;
 }
 #table {
-	height: 98%;
-	width: 98%;
-	margin: 1%;
+	height: 100%;
+	width: 100%;
+	display: inline-block;
 }
 .card {
 	display: block;
@@ -43,6 +43,7 @@ input[type=checkbox] {
 	border-radius: 3%;
 }
 #event-message {
+	display: none; /* TODO: remove this*/
 	position: absolute;
 	width: 100%;
 	margin-top: -4em;
@@ -92,4 +93,34 @@ button:hover {
 }
 dt, dd {
 	display: inline;
+}
+#previous-player, #next-player {
+	display: inline-block;
+	position: absolute;
+	top: 40%;
+	z-index: 1000; /* above all cards. */
+	opacity: 0.5;
+	outline: none;
+}
+#previous-player:hover, #next-player:hover {
+	opacity: 1;
+}
+#previous-player {
+	left: 0%;
+}
+#next-player {
+	right: 0%;
+}
+#ui-wrapper {
+	margin: 0 1%;
+	width: 98%;
+	height: 100%;
+	display: inline-block;
+	position: relative;
+
+}
+#event-log {
+	display: block;
+	width: 100%;
+	margin: auto;
 }
