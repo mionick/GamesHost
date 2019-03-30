@@ -243,6 +243,10 @@ previousPlayerButton.addEventListener('click', () => {
    shuffleButton.setVisible(shownPlayersId === playerId);
 })
 
+document.getElementById("vp-count").addEventListener('click', (event) => {
+   event.srcElement.textContent = "VP: " + players[playerId].getVP();
+})
+
 function showCardText(text: string): void {
    (document.getElementById("card-text") as HTMLParagraphElement).textContent = text;
 }

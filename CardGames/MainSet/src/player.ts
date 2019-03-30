@@ -16,6 +16,8 @@ export class Player {
     public workArea: Field;
     public ongoing: Field;
 
+    private fields: CardContainer[] = [];
+
     constructor(
         table: HTMLElement,
         fieldIndex: CardContainer[],
@@ -25,12 +27,20 @@ export class Player {
 
         this.name = name;
         this.id = id;
+
         this.superHeros = new Deck(true, table, fieldIndex, this.name + "'s Super Heros");
         this.discard = new Deck(true, table, fieldIndex, this.name + "'s Discard");
         this.deck = new Deck(false, table, fieldIndex, this.name + "'s Deck");
         this.hand = new Field(true, table, fieldIndex, this.name + "'s Hand");
         this.workArea = new Field(true, table, fieldIndex, this.name + "'s Work Area");
         this.ongoing = new Field(true, table, fieldIndex, this.name + "'s Ongoing Field");
+
+        this.fields.push(this.superHeros);
+        this.fields.push(this.discard);
+        this.fields.push(this.deck);
+        this.fields.push(this.hand);
+        this.fields.push(this.workArea);
+        this.fields.push(this.ongoing);
     }
 
     public drawHand(): void {
@@ -46,5 +56,25 @@ export class Player {
         this.hand.setVisible(vis);
         this.workArea.setVisible(vis);
         this.ongoing.setVisible(vis);
+    }
+
+    public getVP() : string {
+        let sum = 0;
+        let stars = "";
+
+        this.fields.forEach( field => {
+            field.cards.forEach(element => {
+                if (element.cardInfo.VP) {
+                    let vp = parseInt(element.cardInfo.VP)
+                    if (!isNaN(vp)) {
+                        sum += vp;
+                    } else {
+                        stars += element.cardInfo.VP;
+                    }
+                }
+            });
+        })
+
+        return sum + stars;
     }
 }
