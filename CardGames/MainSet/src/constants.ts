@@ -73,12 +73,14 @@ export class constants {
         }
 
         this.TABLE_WIDTH = this.CARD_WIDTH * 7 + this.DEFAULT_SPACE * 8;
-        
+
         let table = document.createElement("div");
         table.id = "table";
         // Then with the adjusted card size, reset the width of table.
         let uiwrapper = document.getElementById("ui-wrapper");
-        uiwrapper.style.width = this.CARD_WIDTH * 7 + this.DEFAULT_SPACE * 8 + "px";
+        let uiwrapper2 = document.getElementById("ui-wrapper2");
+        uiwrapper.style.width =  this.TABLE_WIDTH + "px";
+        uiwrapper2.style.width =  this.TABLE_WIDTH + "px";
         table.style.width = this.TABLE_WIDTH + "px";
         uiwrapper.appendChild(table)
     }
