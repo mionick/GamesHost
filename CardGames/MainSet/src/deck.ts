@@ -34,10 +34,12 @@ export class Deck extends CardContainer {
     
 
     /** Adds a card to the top of the deck */
-    public addCard(card : Card) : void{
+    public addCard(card : Card, adjust: boolean = true) : void{
         this.cards.unshift(card);
         card.field = this;
-        this.adjustCards();
+        if (adjust) {
+            this.adjustCards();
+        }
     }
 
     public addCardToTop(card : Card) : void {

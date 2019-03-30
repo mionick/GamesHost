@@ -112,8 +112,8 @@ public class MainActivity extends AppCompatActivity {
             serviceBound = true;
 
             // Can't know the port until the service actually starts, so have to do this here.
-            wifiIp = webServerService.getWifiIp() + "/game.html";
-            hostIp = webServerService.getHostIp() + "/game.html";
+            wifiIp = webServerService.getWifiIp() + "/index.html";
+            hostIp = webServerService.getHostIp() + "/index.html";
 
             ((TextView)findViewById(R.id.wifiIp)).setText("If on same Wifi: " + wifiIp);
             ((TextView)findViewById(R.id.hostIp)).setText("If hosting hotspot: " + hostIp);

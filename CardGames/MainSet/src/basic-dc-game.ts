@@ -282,10 +282,15 @@ EVENT_HANDLERS[EventType.CardsMovedEvent] = function (event: GameEvent): void {
    let evt = event as CardsMovedEvent;
    logEvent(players[evt.playerId].name + " Moved " + evt.cardIds.length + " card(s) to " + fieldIndex[evt.fieldToId].name);
    
+   // This only works because I enforce all selected cards are from the same field.
+   // Move all without adjusting
    evt.cardIds.forEach( cardId => {
-      fieldIndex[evt.fieldToId].addCard(cardIndex[cardId].field.take(cardId))
-      logEvent(cardIndex[cardId].cardInfo.CardName)
+      fieldIndex[evt.fieldToId].addCard(cardIndex[cardId].field.take(cardId), false);
+      logEvent(cardIndex[cardId].cardInfo.CardName);
    })
+   // adjust after
+   fieldIndex[evt.fieldToId].adjustCards();
+   cardIndex[0].field.adjustCards();
    logEvent("")
 
 
@@ -392,14 +397,11 @@ function deselectAll(): void {
 // ============================= JAVASCRIPT EVENTS =============================
 
 
-function isDragEvent(event1: any, event2: any) {
-   let clientX1 = event1.clientX || event1.touches[0].clientX;
-   let clientY1 = event1.clientY || event1.touches[0].clientY;
-   let clientX2 = event2.clientX || event2.touches[0].clientX;
-   let clientY2 = event2.clientY || event2.touches[0].clientY;
+function isDragEvent(xy1: Point, xy2: Point) {
+
    return (
-      Math.abs(clientX1 - clientX2) > 5 ||
-      Math.abs(clientY1 - clientY2) > 5);
+      Math.abs(xy1.x - xy2.x) > 5 ||
+      Math.abs(xy1.y - xy1.y) > 5);
 }
 
 let nextPlayerButton = document.getElementById("next-player");
@@ -431,27 +433,39 @@ function showCardText(text: string): void {
 }
 
 // ============================= EVENT LISTENERS FOR ACTION BUTTONS ==============================
-let mouseDownEvtForButton: MouseEvent;
+let firstContactForShuffleButton: Point;
 
-function startTouchingActionButton(event: any) {
-
-   mouseDownEvtForButton = event;
+function startTouchingActionButton(event: MouseEvent) {
+   firstContactForShuffleButton = new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
    shuffleButton.element.classList.add('notransition')
    event.stopPropagation();
-
-
 }
+function startTouchingActionButtonByTouch(event: TouchEvent) {
+   firstContactForShuffleButton = new Point(event.changedTouches[0].clientX - table.getBoundingClientRect().left, event.changedTouches[0].clientY - table.getBoundingClientRect().top);
+   shuffleButton.element.classList.add('notransition')
+   event.stopPropagation();
+   event.preventDefault();
+}
+
 shuffleButton.element.addEventListener("mousedown", startTouchingActionButton);
+shuffleButton.element.addEventListener("touchstart", startTouchingActionButtonByTouch, false);
 
 // ================================== EVENT LISTENERS FOR CARDS ==================================
+class Point {
+   constructor(
+   public x: number,
+   public y: number
+   ){
 
-let mouseDownEvt: MouseEvent;
+   }
+}
+let firstContact: Point;
 let cardClicked: Card;
 let selectedCards = new Set<Card>();
 let isDrag = false;
 
-function doubleTap(event: MouseEvent) {
-   cardClicked = getTouchedCard(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
+function doubleTap(xy: Point) {
+   cardClicked = getTouchedCard(xy.x, xy.y);
 
    if (cardClicked) {
       // cardClicked.setFaceUp(!cardClicked.isFaceUp)
@@ -463,15 +477,15 @@ function doubleTap(event: MouseEvent) {
    }
 }
 
-function touchStart(event: any) {
+function touchStart(xy: Point) {
 
    // Need to get 
    // 1) the card
    // 2) the field From
-   mouseDownEvt = event;
+   firstContact = xy;
    isDrag = false;
 
-   cardClicked = getTouchedCard(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
+   cardClicked = getTouchedCard(xy.x, xy.y);
 
    if (!selectedCards.has(cardClicked)) {
       deselectAll();
@@ -483,34 +497,34 @@ function touchStart(event: any) {
    }
 
    setTimeout(() => {
-      if (mouseDownEvt && !isDrag) {
+      if (firstContact && !isDrag) {
          selectedCards.clear();
          addToSelected(...cardClicked.field.cards);
       }
    }, 600);
 }
 
-function touchMove(event: any) {
+function touchMove(xy: Point) {
 
-   if (mouseDownEvtForButton) {
-      shuffleButton.element.style.transform = "translate(" + (shuffleButton.x - mouseDownEvtForButton.pageX + event.pageX) + "px," + (shuffleButton.y - mouseDownEvtForButton.pageY + event.pageY) + "px)";
+   if (firstContactForShuffleButton) {
+      shuffleButton.element.style.transform = "translate(" + (shuffleButton.x - firstContactForShuffleButton.x + xy.x) + "px," + (shuffleButton.y - firstContactForShuffleButton.y + xy.y) + "px)";
    }
 
-   if (mouseDownEvt && cardClicked) {
-      if (isDragEvent(mouseDownEvt, event)) {
-         cardClicked.element.style.transform = "translate(" + (cardClicked.x - mouseDownEvt.pageX + event.pageX) + "px," + (cardClicked.y - mouseDownEvt.pageY + event.pageY) + "px)";
+   if (firstContact && cardClicked) {
+      if (isDragEvent(firstContact, xy)) {
+         cardClicked.element.style.transform = "translate(" + (cardClicked.x - firstContact.x + xy.x) + "px," + (cardClicked.y - firstContact.y + xy.y) + "px)";
          isDrag = true;
       }
    }
 }
 
-function touchEnd(event: any) {
+function touchEnd(xy: Point) {
 
    //Ending Action For Buttons
-   if (mouseDownEvtForButton) {
+   if (firstContactForShuffleButton) {
       shuffleButton.element.classList.remove('notransition')
       shuffleButton.element.style.transform = "translate(" + (shuffleButton.x) + "px," + (shuffleButton.y) + "px)";
-      let fieldTo = getTouchedField(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
+      let fieldTo = getTouchedField(xy.x, xy.y);
       if (fieldTo instanceof Deck) {
          fieldTo.shuffle();
          sendEvent(new DeckShuffledEvent(
@@ -519,28 +533,29 @@ function touchEnd(event: any) {
             Array.from(fieldTo.cards, (card) => card.id)
          ))
       }
-      mouseDownEvtForButton = null;
+      firstContactForShuffleButton = null;
    }
 
    // Ending Action for Cards
-   if (mouseDownEvt && cardClicked) {
+   if (firstContact && cardClicked) {
 
       cardClicked.element.classList.remove('notransition')
 
       if (isDrag) {
-         let clientX = event.clientX || event.touches[0].clientX;
-         let clientY = event.clientY || event.touches[0].clientY;
 
-         let fieldTo = getTouchedField(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
+         let fieldTo = getTouchedField(xy.x, xy.y);
 
          if (fieldTo) {
             // Move card from one field to another.
             if (cardClicked.field != fieldTo) {
                if (selectedCards.has(cardClicked)) {
                   // Put all selected cards there
-                  selectedCards.forEach(card => {
-                     fieldTo.addCard(card.field.take(card.id))
-                  })
+                  // selectedCards.forEach(card => {
+                  //    fieldTo.addCard(card.field.take(card.id, false), false)
+                  // })
+                  // this only works because I enforce all selected cards are from the same field.
+                  // cardClicked.field.adjustCards();
+                  // fieldTo.adjustCards();
                   sendEvent(new CardsMovedEvent(
                      playerId,
                      fieldTo.id,
@@ -568,7 +583,7 @@ function touchEnd(event: any) {
          showCardText(cardClicked.getText());
       }
    }
-   mouseDownEvt = null;
+   firstContact = null;
    cardClicked = null;
 }
 
@@ -576,29 +591,35 @@ function touchEnd(event: any) {
 table.ondragstart = function () { return false; };
 
 table.addEventListener('mousedown', (event) => {
-   touchStart(event);
+   touchStart(new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
 });
 table.addEventListener('dblclick', (event) => {
-   doubleTap(event);
+   doubleTap(new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
 });
 table.addEventListener('mousemove', (event) => {
-   touchMove(event);
+   touchMove(new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
 });
 table.addEventListener('mouseup', (event) => {
-   touchEnd(event);
+   touchEnd(new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
 });
-table.addEventListener('touchstart', (event) => {
-   touchStart(event);
-   event.preventDefault();
-});
-table.addEventListener('touchmove', (event) => {
-   touchMove(event);
-   event.preventDefault();
-});
-table.addEventListener('touchend', (event) => {
-   touchEnd(event);
-   event.preventDefault();
-});
+
+
+table.addEventListener('touchstart', function(e){
+   var touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
+   touchStart(new Point(touchobj.clientX - table.getBoundingClientRect().left, touchobj.clientY - table.getBoundingClientRect().top))
+   e.preventDefault()
+}, false)
+
+table.addEventListener('touchmove', function(e){
+   var touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
+   touchMove(new Point(touchobj.clientX - table.getBoundingClientRect().left, touchobj.clientY - table.getBoundingClientRect().top))
+   e.preventDefault()
+}, false)
+table.addEventListener('touchend', function(e){
+   var touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
+   touchEnd(new Point(touchobj.clientX - table.getBoundingClientRect().left, touchobj.clientY - table.getBoundingClientRect().top))
+   e.preventDefault()
+}, false)
 
 
 // ACTUAL GAME START

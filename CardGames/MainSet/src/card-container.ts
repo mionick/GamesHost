@@ -44,10 +44,12 @@ export abstract class CardContainer {
         this.y + this.h > y);
     }
 
-    public take(id: number) : Card {
+    public take(id: number, adjust: boolean = true) : Card {
         let index = this.cards.findIndex( x => x.id === id);
         let result =index < 0 ? null : this.cards.splice( index , 1 )[0];
-        this.adjustCards();
+        if(adjust) {
+            this.adjustCards();
+        }
         if(result) {
             result.field = null;
         }
@@ -59,7 +61,7 @@ export abstract class CardContainer {
     }
     
     abstract adjustCards() : void;    
-    abstract addCard(card : Card): void;
+    abstract addCard(card : Card, adjust: boolean): void;
     abstract getTouchedCard(x: number, y: number): Card;
 
 }

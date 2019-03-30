@@ -1,25 +1,27 @@
 package io.github.mionick.androidgameshost.web;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
+import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 /**
  *
@@ -57,12 +59,10 @@ public class WebServerService extends Service {
     private void getServer() {
         server = new AsyncHttpServer();
         server.get("/api/event/.*", eventApiCallback );
-        server.get("/api/connection/", connectionApiCallback );
-        server.post("/api/user/", registerRequestApiCallback);
-        server.post("/api/input/", postInputApiCallback );
+        server.post("/api/event/", postEventApiCallback);
 
         // Serve files like [a-z].[a-z]
-        server.get("/\\w+\\.\\w+", websiteCallback );
+        server.get("/[\\w+/]*[\\w%0-9]+\\.\\w+", websiteCallback );
 
         server.get("/test", (x, y) -> y.send("Server Running!"));
 
@@ -78,6 +78,8 @@ public class WebServerService extends Service {
     public String getHostIp() {
         return "192.168.43.1:" + port;
     }
+    private final ArrayList<AsyncHttpServerResponse> outstandingRequests = new ArrayList<>(10);
+    private ArrayList<String> events = new ArrayList<>(200);
 
 
     private HttpServerRequestCallback eventApiCallback = (request, response) -> {
@@ -87,118 +89,42 @@ public class WebServerService extends Service {
 
         // 1) get the event number they sent in their request path:
         // this will be given to us as ?event={number}
-//        int theirEventNumber = Integer.parseInt(request.getQuery().get("event").get(0));
-//        Log.v(LOG_TAG, "RECIEVED EVENT REQUEST. NUM: " + theirEventNumber);
-//
-//        if (theirEventNumber < this.events.size()) {
-//            // Build a JSON response containing all the events they've missed.
-//            int difference = this.events.size() - theirEventNumber;
-//            EventInstance[] eventsArray = new EventInstance[difference];
-//            for (int i = theirEventNumber; i < this.events.size(); i++) {
-//                eventsArray[i-theirEventNumber] = this.events.get(i);
-//            }
-//
-//            String jsonResponse = gson.toJson(eventsArray);
-//            response.send(jsonResponse);
-//
-//        } else {
-//            synchronized (this.outstandingRequests) {
-//                this.outstandingRequests.add(response);
-//            }
-//        }
+        int theirEventNumber = Integer.parseInt(request.getQuery().get("event").get(0));
+        Log.v(LOG_TAG, "RECIEVED EVENT REQUEST. NUM: " + theirEventNumber);
+
+        if (theirEventNumber < this.events.size()) {
+            // Build a JSON response containing all the events they've missed.
+            int difference = this.events.size() - theirEventNumber;
+            String[] eventsArray = new String[difference];
+            for (int i = theirEventNumber; i < this.events.size(); i++) {
+                eventsArray[i-theirEventNumber] = this.events.get(i);
+            }
+
+            response.send("[" + TextUtils.join(",", eventsArray) + "]");
+
+        } else {
+            synchronized (this.outstandingRequests) {
+                this.outstandingRequests.add(response);
+            }
+        }
     };
 
-    HttpServerRequestCallback registerRequestApiCallback = (request, response) -> {
-        Log.v(LOG_TAG, "register request");
-
-//
-//        try {
-//            JSONObject theirInput = ((AsyncHttpRequestBody<JSONObject>)request.getBody()).get();
-//
-//            // Identifier is meant t be used to prevent duplicate names
-//            //String identifier = theirInput.getString("identifier");
-//            String name = theirInput.getString("name");
-//            Log.v(LOG_TAG, name);
-///*
-//            try {
-//                name =
-//                        new String(name.getBytes(), "UTF16") + " " +
-//                                new String(name.getBytes(), "UTF8") + " " +
-//                                        new String(name.getBytes(), "UTF32");
-//            } catch (UnsupportedEncodingException e) {
-//                e.printStackTrace();
-//            }
-//*/
-//
-//
-//            if (registeredUsers.containsKey(name)) {
-//                response.send(gson.toJson(new EventInstance<CommunicationEvent>(CommunicationEvent.NAME_TAKEN)));
-//                Log.v(LOG_TAG, "Send NAME_TAKEN");
-//                return;
-//            } else if (!gameStarted) {
-//                {
-//                    registeredUsers.put(name, true);
-//                    players.add(name);
-//                    Log.v(LOG_TAG, "Adding them to the list.");
-//                    EventInstance event = new EventInstance<CommunicationEvent>(CommunicationEvent.PLAYER_JOINED, name);
-//                    OnGameEvent(event);
-//                    onPlayerAdded();
-//                    Log.v(LOG_TAG, "Added them to the list.");
-//
-//                }
-//            } else {
-//                // Not in list and game started
-//                registeredUsers.put(name, false);
-//                players.add(name);
-//                Log.v(LOG_TAG, "Adding them to the list with false.");
-//                EventInstance event = new EventInstance<CommunicationEvent>(CommunicationEvent.GAME_IN_PROGRESS, name);
-//                OnGameEvent(event);
-//                onPlayerAdded();
-//                Log.v(LOG_TAG, "Added them to the list with false.");
-//                response.send(gson.toJson(event));
-//                return;
-//            }
-//        } catch (JSONException e) {
-//            response.code(500).send("Not Registered!");
-//            Log.v(LOG_TAG, "Send 500");
-//            e.printStackTrace();
-//        }
-//        response.send(gson.toJson(new EventInstance<CommunicationEvent>(CommunicationEvent.JOINED_SUCCESSFULLY)));
-//        Log.v(LOG_TAG, "Send JOINED_SUCCESSFULLY");
-
-    };
-
-    HttpServerRequestCallback postInputApiCallback = (request, response) -> {
+    HttpServerRequestCallback postEventApiCallback = (request, response) -> {
         // IF they are registered in the current game session
         // TODO: take latency into account for that user, use the input that comes first on the game.
         // use this.selectCardsHandler
-//        AsyncHttpRequestBody<JSONObject> body = (AsyncHttpRequestBody<JSONObject>)request.getBody();
-//
-//        try {
-//            JSONObject theirInput = body.get();
-//
-//
-//            String identifier = theirInput.getString("name");
-//
-//            // if they registered and were allowed in the game
-//            if (registeredUsers.containsKey(identifier) && registeredUsers.get(identifier)) {
-//                // They are allowed to make inputs.
-//                // Get the indexes of the cards they chose.
-//                String name = theirInput.getString("name");
-//                JSONArray inputs = theirInput.getJSONArray("selectedCards");
-//
-//                IntTriple triple = new IntTriple();
-//                triple.setInt1(inputs.getInt(0));
-//                triple.setInt2(inputs.getInt(1));
-//                triple.setInt3(inputs.getInt(2));
-//                this.selectCardsHandler.SelectSet(name, triple);
-//            }
-//        } catch (JSONException e) {
-//            response.code(500).send("Input failed!");
-//            e.printStackTrace();
-//        }
-//
-//        response.send("Ok.");
+        AsyncHttpRequestBody<String> body = (AsyncHttpRequestBody<String>)request.getBody();
+
+        String responseString = body.get();
+        events.add(responseString);
+
+        for (AsyncHttpServerResponse otherResponse :
+                this.outstandingRequests) {
+            //response.setContentType("application/json; charset=utf-16");
+            otherResponse.send(responseString);
+        }
+
+        response.send("Ok.");
     };
 
 
@@ -206,20 +132,18 @@ public class WebServerService extends Service {
 
         AssetManager am = getApplication().getBaseContext().getAssets();
         try {
-            InputStream stream = am.open(request.getPath().substring(1));
-            response.sendStream(stream, stream.available()); // TODO: available was not meant to be used as the total length. Might not work.
+            try {
+                String result = java.net.URLDecoder.decode(request.getPath().substring(1), StandardCharsets.UTF_8.name());
+                InputStream stream = am.open(result);
+                response.sendStream(stream, stream.available()); // TODO: available was not meant to be used as the total length. Might not work.
+            } catch (UnsupportedEncodingException e) {
+                // not going to happen - value came from JDK's own StandardCharsets
+                Log.v(LOG_TAG, e.toString());
+            }
         } catch (IOException e) {
             e.printStackTrace();
             response.code(404);
         }
-    };
-
-
-    HttpServerRequestCallback connectionApiCallback = (request, response) -> {
-
-
-        // Send the two ip addresses, our local wifi and the android hotspot one
-        //response.send(gson.toJson(new EventInstance<CommunicationEvent>(CommunicationEvent.COMMUNICATION, getWifiIp() , getHostIp())));
     };
 
 

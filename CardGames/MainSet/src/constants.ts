@@ -11,7 +11,7 @@ export class constants {
     static DECK_LEAN_Y_FACTOR = 0.1;
 
     static STARTING_VILLAIN = "Ra's al Ghul";
-    static BACK_OF_CARD = "Back.jpg";
+    static BACK_OF_CARD = "back.jpeg";
     static CARDS_FOLDER = "assets/cards/";
     static SHUFFLE_ICON = "assets/shuffle.png";
 
@@ -82,6 +82,8 @@ export class constants {
         uiwrapper.style.width =  this.TABLE_WIDTH + "px";
         uiwrapper2.style.width =  this.TABLE_WIDTH + "px";
         table.style.width = this.TABLE_WIDTH + "px";
+        table.style.height = this.TABLE_HEIGHT + "px";
+
         uiwrapper.appendChild(table)
     }
 }
