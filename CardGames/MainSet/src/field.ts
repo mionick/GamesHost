@@ -12,7 +12,7 @@ export class Field extends CardContainer {
             fieldIndex : CardContainer[],
             name: string
         ) {
-        super(name);
+        super(name, fieldIndex);
 
         let div = document.createElement("div");
 
@@ -66,12 +66,7 @@ export class Field extends CardContainer {
             card.element.style.transform = "translate(" + ( card.x ) + "px," + ( card.y ) + "px)";
             card.element.style.zIndex = "" + (i + 1);
             card.element.style.visibility = this.visible ? "visible" : "hidden";
-
-            if (this.isFaceUp){
-                card.setFaceUp();
-            } else {
-                card.setFaceDown();
-            }
+            card.setFaceUp(this.isFaceUp);
 
         });
 

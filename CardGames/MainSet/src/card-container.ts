@@ -3,6 +3,7 @@ import { Card } from "./card";
 export abstract class CardContainer {
 
     public name = "";
+    public id: number = null;
     public cards : Card[] = [];
 
     // In pixels
@@ -14,8 +15,9 @@ export abstract class CardContainer {
     protected visible = true;
     public element: HTMLElement;
 
-    constructor(name: string) {
+    constructor(name: string, fieldIndex: CardContainer[]) {
         this.name =  name;
+        this.id = fieldIndex.length;
     }
     
     public setXY(x: number, y : number) : void {

@@ -37,13 +37,14 @@ export class Card {
 
     }
 
-    public setFaceDown(): void {
-        this.element.src = constants.CARDS_FOLDER + constants.BACK_OF_CARD;
-        this.isFaceUp = false;
-    }
-    public setFaceUp(): void {
-        this.element.src = constants.CARDS_FOLDER + this.cardInfo.FileName;
-        this.isFaceUp = true;
+    public setFaceUp(up: boolean): void {
+        if(up) {
+            this.element.src = constants.CARDS_FOLDER + this.cardInfo.FileName;
+            this.isFaceUp = true;
+        } else {
+            this.element.src = constants.CARDS_FOLDER + constants.BACK_OF_CARD;
+            this.isFaceUp = false;
+        }
     }
     public getText(): string {
         return this.isFaceUp ? this.cardInfo.CardText : "";

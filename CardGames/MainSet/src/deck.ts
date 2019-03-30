@@ -11,7 +11,7 @@ export class Deck extends CardContainer {
             name: string
         ) {
         
-        super(name);
+        super(name, fieldIndex);
 
         this.w = constants.CARD_WIDTH;
         this.h = constants.CARD_HEIGHT;
@@ -79,11 +79,7 @@ export class Deck extends CardContainer {
             card.element.style.zIndex = "" + (height + 1);
             card.element.style.visibility = this.visible ? "visible" : "hidden";
 
-            if (this.isFaceUp){
-                card.setFaceUp();
-            } else {
-                card.setFaceDown();
-            }
+            card.setFaceUp(this.isFaceUp);
 
         });
 
