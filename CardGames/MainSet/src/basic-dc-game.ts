@@ -11,6 +11,10 @@ import { ShuffleTrigger } from "./shuffle-trigger";
 // CARD_LIST  defined as global object in assets/cards.js, loaded by index.html before this is run.
 declare var CARD_LIST: CardInfo[];
 
+let mod = function(m: number, n: number) {
+   return ((m%n)+n)%n;
+   }
+
 /**
  * Don’t ever use the types Number, String, Boolean, or Object. These types refer to non-primitive boxed objects that are almost never used appropriately in JavaScript code.
 
@@ -227,7 +231,7 @@ let nextPlayerButton = document.getElementById("next-player");
 let previousPlayerButton = document.getElementById("previous-player");
 
 nextPlayerButton.addEventListener('click', () => {
-   shownPlayersId = (shownPlayersId + 1) % players.length;
+   shownPlayersId = mod((shownPlayersId + 1), players.length);
    players.forEach((player, index) => {
       player.setVisible(index === shownPlayersId);
    })
@@ -236,7 +240,7 @@ nextPlayerButton.addEventListener('click', () => {
 })
 
 previousPlayerButton.addEventListener('click', () => {
-   shownPlayersId = (shownPlayersId - 1) % players.length;
+   shownPlayersId = mod((shownPlayersId - 1), players.length);
    players.forEach((player, index) => {
       player.setVisible(index === shownPlayersId);
    })
@@ -365,12 +369,12 @@ function touchEnd(event: any) {
 
    //Ending Action For Buttons
    if (mouseDownEvtForButton) {
+      shuffleButton.element.classList.remove('notransition')
       shuffleButton.element.style.transform = "translate(" + (shuffleButton.x) + "px," + (shuffleButton.y) + "px)";
       let fieldTo = getTouchedField(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
       if (fieldTo instanceof Deck) {
          fieldTo.shuffle();
       }
-      shuffleButton.element.classList.remove('notransition')
       mouseDownEvtForButton = null;
    }
 

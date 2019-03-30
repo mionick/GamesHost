@@ -21,6 +21,6 @@ export class ShuffleTrigger {
     }
 
     public setVisible(vis: boolean) {
-        this.element.style.display =  vis ? "block" : "none";
+        this.element.style.visibility =  vis ? "visible" : "hidden";
     }
 }

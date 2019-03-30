@@ -28,9 +28,9 @@ export abstract class CardContainer {
     public setVisible(vis : boolean) : void {
         this.visible = vis;
         if (vis) {
-            this.element.style.display = "block";
+            this.element.style.visibility = "visible";
         } else {
-            this.element.style.display = "none";
+            this.element.style.visibility = "hidden";
         }
         this.adjustCards();
     }

@@ -77,7 +77,7 @@ export class Deck extends CardContainer {
             card.y = this.y + height * constants.DECK_LEAN_Y_FACTOR;
             card.element.style.transform = "translate(" + ( card.x ) + "px," + ( card.y ) + "px)";
             card.element.style.zIndex = "" + (height + 1);
-            card.element.style.display = this.visible ? "block" : "none";
+            card.element.style.visibility = this.visible ? "visible" : "hidden";
 
             if (this.isFaceUp){
                 card.setFaceUp();

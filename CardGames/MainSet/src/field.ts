@@ -65,7 +65,7 @@ export class Field extends CardContainer {
             card.y = this.y;
             card.element.style.transform = "translate(" + ( card.x ) + "px," + ( card.y ) + "px)";
             card.element.style.zIndex = "" + (i + 1);
-            card.element.style.display = this.visible ? "block" : "none";
+            card.element.style.visibility = this.visible ? "visible" : "hidden";
 
             if (this.isFaceUp){
                 card.setFaceUp();
