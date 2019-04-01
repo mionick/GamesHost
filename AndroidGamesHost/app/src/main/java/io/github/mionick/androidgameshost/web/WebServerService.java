@@ -12,6 +12,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
+import com.koushikdutta.async.http.body.StringBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
@@ -28,16 +29,17 @@ import java.util.ArrayList;
  */
 public class WebServerService extends Service {
 
-    // TODO: Why make this specific to DC?
     private static String LOG_TAG = "WebServerService";
     private IBinder mBinder = new WebServiceBinder();
+
+    private final ArrayList<AsyncHttpServerResponse> outstandingRequests = new ArrayList<>(10);
+    private final ArrayList<String> events = new ArrayList<>(200);
+
 
     // TODO: check if port is taken, then increment if it is.
     private final int port = 6006;
 
-
     private AsyncHttpServer server;
-
     public WebServerService() {
         Log.v(LOG_TAG, "in constructor");
 
@@ -45,9 +47,13 @@ public class WebServerService extends Service {
     public void stop() {
         if (server != null) {
             server.stop();
+            outstandingRequests.clear();
+            events.clear();
         }
         server = null;
     }
+
+
     public void start() {
         if (server == null) {
             getServer();
@@ -55,20 +61,18 @@ public class WebServerService extends Service {
         }
     }
 
-
     private void getServer() {
         server = new AsyncHttpServer();
         server.get("/api/event/.*", eventApiCallback );
         server.post("/api/event/", postEventApiCallback);
 
         // Serve files like [a-z].[a-z]
-        server.get("/[\\w+/]*[\\w%0-9]+\\.\\w+", websiteCallback );
+        server.get("/[\\w+/]*[\\w-_%0-9]+\\.\\w+", websiteCallback );
 
         server.get("/test", (x, y) -> y.send("Server Running!"));
 
 
     }
-
     public String getWifiIp() {
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         int ip = wm != null ? wm.getConnectionInfo().getIpAddress() : 0;
@@ -78,8 +82,6 @@ public class WebServerService extends Service {
     public String getHostIp() {
         return "192.168.43.1:" + port;
     }
-    private final ArrayList<AsyncHttpServerResponse> outstandingRequests = new ArrayList<>(10);
-    private ArrayList<String> events = new ArrayList<>(200);
 
 
     private HttpServerRequestCallback eventApiCallback = (request, response) -> {
@@ -93,14 +95,15 @@ public class WebServerService extends Service {
         Log.v(LOG_TAG, "RECIEVED EVENT REQUEST. NUM: " + theirEventNumber);
 
         if (theirEventNumber < this.events.size()) {
-            // Build a JSON response containing all the events they've missed.
-            int difference = this.events.size() - theirEventNumber;
-            String[] eventsArray = new String[difference];
-            for (int i = theirEventNumber; i < this.events.size(); i++) {
-                eventsArray[i-theirEventNumber] = this.events.get(i);
+            synchronized (this.events) {
+                // Build a JSON response containing all the events they've missed.
+                int difference = this.events.size() - theirEventNumber;
+                String[] eventsArray = new String[difference];
+                for (int i = theirEventNumber; i < this.events.size(); i++) {
+                    eventsArray[i - theirEventNumber] = this.events.get(i);
+                }
+                response.send("[" + TextUtils.join(",", eventsArray) + "]");
             }
-
-            response.send("[" + TextUtils.join(",", eventsArray) + "]");
 
         } else {
             synchronized (this.outstandingRequests) {
@@ -113,18 +116,27 @@ public class WebServerService extends Service {
         // IF they are registered in the current game session
         // TODO: take latency into account for that user, use the input that comes first on the game.
         // use this.selectCardsHandler
-        AsyncHttpRequestBody<String> body = (AsyncHttpRequestBody<String>)request.getBody();
+        StringBody body = (StringBody)request.getBody();
 
         String responseString = body.get();
-        events.add(responseString);
-
-        for (AsyncHttpServerResponse otherResponse :
-                this.outstandingRequests) {
-            //response.setContentType("application/json; charset=utf-16");
-            otherResponse.send(responseString);
+        synchronized (this.events) {
+            events.add(responseString);
         }
 
-        response.send("Ok.");
+        Log.v(LOG_TAG, responseString);
+
+        synchronized (this.outstandingRequests) {
+            for (AsyncHttpServerResponse otherResponse :
+                    this.outstandingRequests) {
+                otherResponse.setContentType("application/json; charset=utf-16");
+                Log.v(LOG_TAG, "Responding to outstanding requests: " + outstandingRequests.size());
+                Log.v(LOG_TAG, "[" + responseString +"]");
+                otherResponse.send("[" + responseString +"]");
+            }
+            this.outstandingRequests.clear();
+        }
+
+        response.send(responseString);
     };
 
 

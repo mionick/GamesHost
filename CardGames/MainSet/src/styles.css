@@ -158,3 +158,17 @@ dt, dd {
 	z-index: 500;
 	mix-blend-mode: saturation;
 }
+#registration-page {
+	z-index: 2000;
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	background: rgba(0,0,0,0.3);
+	top: 0;
+}
+#host-section {
+	display: none;
+}
+button {
+	outline: none;
+}

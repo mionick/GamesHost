@@ -26,7 +26,8 @@ export enum EventType {
     GameStartEvent,
     CardsMovedEvent,
     CardFlippedEvent,
-    DeckShuffledEvent
+    DeckShuffledEvent,
+    HostRequestEvent
 }
 
 export abstract class GameEvent {
@@ -36,6 +37,13 @@ export abstract class GameEvent {
     }
 }
 
+export class HostRequestEvent extends GameEvent {
+    constructor(
+        public machineId : number
+    ) {
+        super(EventType.HostRequestEvent)
+    }
+}
 export class PlayerRequestEvent extends GameEvent {
     constructor(
         public name : string,
@@ -46,7 +54,8 @@ export class PlayerRequestEvent extends GameEvent {
 }
 export class GameStartEvent extends GameEvent {
     constructor(
-        public machineIds : number[]
+        public machineIds : number[],
+        public heroIds : number[] //id of hero card for each player
     ) {
         super(EventType.GameStartEvent)
     }

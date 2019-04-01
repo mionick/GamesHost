@@ -237,7 +237,7 @@ getEvent = async function (events) {
 }
 
 async function sendInput(selectedCards) {
-	fetch(baseUrl + 'api/input/',
+	await fetch(baseUrl + 'api/input/',
 		{
 			method: 'POST',
 			headers: {

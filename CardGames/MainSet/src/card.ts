@@ -27,6 +27,7 @@ export class Card {
      
         img.style.width = constants.CARD_WIDTH + "px";
         img.style.height = constants.CARD_HEIGHT + "px";
+        img.style.visibility = "hidden";
     
         this.element = img;
         
