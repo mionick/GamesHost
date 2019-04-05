@@ -10,10 +10,12 @@ export class constants {
     static DECK_LEAN_X_FACTOR = 0.2;
     static DECK_LEAN_Y_FACTOR = 0.1;
 
-    static STARTING_VILLAIN = "Ra's al Ghul";
+    static STARTING_VILLAIN = //"Ra's al Ghul";
+    "Slade Wilson";
     static BACK_OF_CARD = "back.jpeg";
     static CARDS_FOLDER = "assets/cards/";
     static SHUFFLE_ICON = "assets/shuffle.png";
+    static DRAW_ICON = "assets/draw5.png";
 
 
     static DEFAULT_SPACING_FRACTION = 0.1;

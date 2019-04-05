@@ -48,7 +48,7 @@ export class Card {
         }
     }
     public getText(): string {
-        return this.isFaceUp ? this.cardInfo.CardText : "";
+        return this.isFaceUp ? this.cardInfo.CardText + "\nCost: " +  this.cardInfo.Cost : "";
     }
 
     public contains(x: number, y : number) : boolean {

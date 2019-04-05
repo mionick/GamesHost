@@ -109,9 +109,11 @@ dt, dd {
 	z-index: 1000; /* above all cards. */
 	opacity: 0.5;
 	outline: none;
+	width: 2em;
 }
 #previous-player:hover, #next-player:hover {
 	opacity: 1;
+
 }
 #previous-player {
 	left: 0%;
@@ -171,4 +173,13 @@ dt, dd {
 }
 button {
 	outline: none;
+}
+#draw5-btn {
+	position: absolute;
+	border-radius: 50%;
+	top: 0;
+	left: 0;
+	font-weight: 400;
+	z-index: 1000;
+	border: none;
 }

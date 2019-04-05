@@ -8,6 +8,7 @@ import { Player } from "./player";
 import { CardContainer } from "./card-container";
 import { ShuffleTrigger } from "./shuffle-trigger";
 import { GameEvent, EventType, GameStartEvent, CardsMovedEvent, CardFlippedEvent, DeckShuffledEvent, PlayerRequestEvent, HostRequestEvent } from "./event";
+import { DrawFiveTrigger } from "./draw-five-trigger";
 
 // CARD_LIST  defined as global object in assets/cards.js, loaded by index.html before this is run.
 declare var CARD_LIST: CardInfo[];
@@ -167,9 +168,12 @@ let shuffleButton = new ShuffleTrigger(
    constants.CARD_WIDTH / 2,
    table
 )
-
-
-
+let draw5Trigger = new DrawFiveTrigger(
+   constants.TABLE_WIDTH - constants.CARD_WIDTH / 2,
+   constants.TABLE_HEIGHT - constants.CARD_WIDTH / 2,
+   constants.CARD_WIDTH / 2,
+   table
+)
 
 // ============================= GAME EVENTS =============================
 // gets recent events, does not process them. Can be mocked.
@@ -365,6 +369,7 @@ EVENT_HANDLERS[EventType.GameStartEvent] = function (event: GameEvent): void {
 
    lineup.adjustCards();
    villains.adjustCards();
+   villains.cards[0].setFaceUp(true);
 
    mainDeck.adjustCards();
    weaknesses.adjustCards();
@@ -402,7 +407,8 @@ EVENT_HANDLERS[EventType.CardsMovedEvent] = function (event: GameEvent): void {
 }
 EVENT_HANDLERS[EventType.CardFlippedEvent] = function (event: GameEvent): void {
    let evt = event as CardFlippedEvent;
-   let name = evt.playerId && players[evt.playerId].name;
+   let name = evt.playerId >= 0 && players[evt.playerId] ? players[evt.playerId].name : "Host";
+   
    logEvent(name + " Flipped card: " + cardIndex[evt.cardId].cardInfo.CardName);
    cardIndex[evt.cardId].setFaceUp(evt.faceUp);
    logEvent("")
@@ -410,7 +416,8 @@ EVENT_HANDLERS[EventType.CardFlippedEvent] = function (event: GameEvent): void {
 }
 EVENT_HANDLERS[EventType.DeckShuffledEvent] = function (event: GameEvent): void {
    let evt = event as DeckShuffledEvent;
-   let name = evt.playerId && players[evt.playerId].name;
+   let name = evt.playerId >= 0 && players[evt.playerId] ? players[evt.playerId].name : "Host";
+   
    logEvent(name + " Shuffled deck: " + fieldIndex[evt.fieldId].name);
 
    // build new deck list.
@@ -543,11 +550,11 @@ function deselectAll(): void {
 // ============================= JAVASCRIPT EVENTS =============================
 
 
-function isDragEvent(xy1: Point, xy2: Point) {
+function isDragEvent(xy1: Contact, xy2: Contact) {
 
    return (
-      Math.abs(xy1.x - xy2.x) > 5 ||
-      Math.abs(xy1.y - xy1.y) > 5);
+      Math.abs(xy1.x - xy2.x) > 3 ||
+      Math.abs(xy1.y - xy1.y) > 3);
 }
 
 let nextPlayerButton = document.getElementById("next-player");
@@ -559,6 +566,7 @@ nextPlayerButton.addEventListener('click', () => {
       player.setVisible(index === shownPlayersId);
    })
    shuffleButton.setVisible(shownPlayersId === playerId);
+   draw5Trigger.setVisible(shownPlayersId === playerId);
 
 })
 
@@ -568,6 +576,8 @@ previousPlayerButton.addEventListener('click', () => {
       player.setVisible(index === shownPlayersId);
    })
    shuffleButton.setVisible(shownPlayersId === playerId);
+   draw5Trigger.setVisible(shownPlayersId === playerId);
+
 })
 
 document.getElementById("vp-count").addEventListener('click', (event) => {
@@ -579,15 +589,15 @@ function showCardText(text: string): void {
 }
 
 // ============================= EVENT LISTENERS FOR ACTION BUTTONS ==============================
-let firstContactForShuffleButton: Point;
+let firstContactForShuffleButton: Contact;
 
 function startTouchingActionButton(event: MouseEvent) {
-   firstContactForShuffleButton = new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
+   firstContactForShuffleButton = new Contact(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top);
    shuffleButton.element.classList.add('notransition')
    event.stopPropagation();
 }
 function startTouchingActionButtonByTouch(event: TouchEvent) {
-   firstContactForShuffleButton = new Point(event.changedTouches[0].clientX - table.getBoundingClientRect().left, event.changedTouches[0].clientY - table.getBoundingClientRect().top);
+   firstContactForShuffleButton = new Contact(event.changedTouches[0].clientX - table.getBoundingClientRect().left, event.changedTouches[0].clientY - table.getBoundingClientRect().top);
    shuffleButton.element.classList.add('notransition')
    event.stopPropagation();
    event.preventDefault();
@@ -595,6 +605,40 @@ function startTouchingActionButtonByTouch(event: TouchEvent) {
 
 shuffleButton.element.addEventListener("mousedown", startTouchingActionButton);
 shuffleButton.element.addEventListener("touchstart", startTouchingActionButtonByTouch, false);
+
+
+draw5Trigger.element.onclick = () => {
+   if (playerId === shownPlayersId) {
+      let cards = players[playerId].deck.cards.slice(0, 5);
+      if (cards.length > 0) {
+         sendEvent(new CardsMovedEvent(
+            playerId,
+            players[playerId].hand.id,
+            Array.from(cards, (card) => { return card.id })
+         ))
+      }
+   }
+   event.stopPropagation();
+}
+
+draw5Trigger.element.addEventListener( "touchend", () => {
+   if (playerId === shownPlayersId) {
+      let cards = players[playerId].deck.cards.slice(0, 5);
+      if (cards.length > 0) {
+         sendEvent(new CardsMovedEvent(
+            playerId,
+            players[playerId].hand.id,
+            Array.from(cards, (card) => { return card.id })
+         ))
+      }
+   }
+   event.stopPropagation();
+   event.preventDefault();
+},
+false);
+
+
+
 
 (document.getElementById("host-btn") as HTMLButtonElement).onclick = () => {
    sendEvent(new HostRequestEvent(machineId));
@@ -624,12 +668,7 @@ shuffleButton.element.addEventListener("touchstart", startTouchingActionButtonBy
          Array.from(villains.cards, (card) => card.id)
          ));
          
-      villains.cards[0].setFaceUp(true);
-      await sendEvent(new CardFlippedEvent(
-         null,
-         villains.cards[0].id,
-         true
-      ))
+
       lineup.addCard(mainDeck.draw());
       lineup.addCard(mainDeck.draw());
       lineup.addCard(mainDeck.draw());
@@ -671,21 +710,26 @@ shuffleButton.element.addEventListener("touchstart", startTouchingActionButtonBy
    }
 }
 
+
+
 // ================================== EVENT LISTENERS FOR CARDS ==================================
-class Point {
+class Contact {
    constructor(
       public x: number,
-      public y: number
+      public y: number,
+      public time: any = 0 // timestamp
    ) {
 
    }
 }
-let firstContact: Point;
+
+let recentTouches: Contact[] = [null, null];
+let firstContact: Contact = null;
 let cardClicked: Card;
 let selectedCards = new Set<Card>();
 let isDrag = false;
 
-function doubleTap(xy: Point) {
+function doubleTap(xy: Contact) {
    cardClicked = getTouchedCard(xy.x, xy.y);
 
    if (cardClicked) {
@@ -695,14 +739,40 @@ function doubleTap(xy: Point) {
          cardClicked.id,
          !cardClicked.isFaceUp
       ))
+      cardClicked.setFaceUp(!cardClicked.isFaceUp)
    }
 }
 
-function touchStart(xy: Point) {
+function isDoubleTap(recentTouches : Contact[]) {
+   let c1 = recentTouches[0];
+   let c2 = recentTouches[1];
+
+   return (
+      c1 && 
+      c2 &&
+      !isDragEvent(c1, c2) &&
+      c2.time - c1.time < 600
+      );
+
+
+}
+
+
+function touchStart(xy: Contact) {
 
    // Need to get 
    // 1) the card
    // 2) the field From
+   
+   // These are used to detect double tap.
+   recentTouches.push(xy);
+   recentTouches.shift();
+
+   if (isDoubleTap(recentTouches)) {
+      doubleTap(recentTouches[1]);
+      return;
+   }
+
    firstContact = xy;
    isDrag = false;
 
@@ -718,14 +788,14 @@ function touchStart(xy: Point) {
    }
 
    setTimeout(() => {
-      if (firstContact && !isDrag) {
+      if (firstContact && recentTouches[1] === xy && !isDrag) {
          selectedCards.clear();
          addToSelected(...cardClicked.field.cards);
       }
    }, 600);
 }
 
-function touchMove(xy: Point) {
+function touchMove(xy: Contact) {
 
    if (firstContactForShuffleButton) {
       shuffleButton.element.style.transform = "translate(" + (shuffleButton.x - firstContactForShuffleButton.x + xy.x) + "px," + (shuffleButton.y - firstContactForShuffleButton.y + xy.y) + "px)";
@@ -739,7 +809,7 @@ function touchMove(xy: Point) {
    }
 }
 
-function touchEnd(xy: Point) {
+function touchEnd(xy: Contact) {
 
    //Ending Action For Buttons
    if (firstContactForShuffleButton) {
@@ -812,33 +882,30 @@ function touchEnd(xy: Point) {
 table.ondragstart = function () { return false; };
 
 table.addEventListener('mousedown', (event) => {
-   touchStart(new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
-});
-table.addEventListener('dblclick', (event) => {
-   doubleTap(new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
+   touchStart(new Contact(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top, event.timeStamp));
 });
 table.addEventListener('mousemove', (event) => {
-   touchMove(new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
+   touchMove(new Contact(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
 });
 table.addEventListener('mouseup', (event) => {
-   touchEnd(new Point(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
+   touchEnd(new Contact(event.clientX - table.getBoundingClientRect().left, event.clientY - table.getBoundingClientRect().top));
 });
 
 
 table.addEventListener('touchstart', function (e) {
    var touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
-   touchStart(new Point(touchobj.clientX - table.getBoundingClientRect().left, touchobj.clientY - table.getBoundingClientRect().top))
+   touchStart(new Contact(touchobj.clientX - table.getBoundingClientRect().left, touchobj.clientY - table.getBoundingClientRect().top, e.timeStamp))
    e.preventDefault()
 }, false)
 
 table.addEventListener('touchmove', function (e) {
    var touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
-   touchMove(new Point(touchobj.clientX - table.getBoundingClientRect().left, touchobj.clientY - table.getBoundingClientRect().top))
+   touchMove(new Contact(touchobj.clientX - table.getBoundingClientRect().left, touchobj.clientY - table.getBoundingClientRect().top))
    e.preventDefault()
 }, false)
 table.addEventListener('touchend', function (e) {
    var touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
-   touchEnd(new Point(touchobj.clientX - table.getBoundingClientRect().left, touchobj.clientY - table.getBoundingClientRect().top))
+   touchEnd(new Contact(touchobj.clientX - table.getBoundingClientRect().left, touchobj.clientY - table.getBoundingClientRect().top))
    e.preventDefault()
 }, false)
 

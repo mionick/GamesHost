@@ -849,7 +849,7 @@ var CARD_LIST = [
    Draw: "x",
    Destroy: null,
    Ongoing: null,
-   CardText: "+2 Power and each foe chooses, He discards a random card; or you draw a card. FIRST APPEARANCE -- ATTACK: Each player puts a card from his hand into the discard pile of the player on his left. If the card you received has a cost of 1 or greater, put a Wea",
+   CardText: "+2 Power and each foe chooses, He discards a random card; or you draw a card. FIRST APPEARANCE -- ATTACK: Each player puts a card from his hand into the discard pile of the player on his left. If the card you received has a cost of 1 or greater, put a Weakness on top of your deck.",
    Copies: null,
    FileName: "The Joker 10.jpeg"
  },
