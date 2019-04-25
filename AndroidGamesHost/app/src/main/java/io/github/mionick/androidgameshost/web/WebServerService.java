@@ -40,10 +40,12 @@ public class WebServerService extends Service {
     private final int port = 6006;
 
     private AsyncHttpServer server;
+
     public WebServerService() {
         Log.v(LOG_TAG, "in constructor");
 
     }
+
     public void stop() {
         if (server != null) {
             server.stop();
@@ -63,80 +65,80 @@ public class WebServerService extends Service {
 
     private void getServer() {
         server = new AsyncHttpServer();
-        server.get("/api/event/.*", eventApiCallback );
+        server.get("/api/event/.*", eventApiCallback);
         server.post("/api/event/", postEventApiCallback);
 
         // Serve files like [a-z].[a-z]
-        server.get("/[\\w+/]*[\\w-_%0-9]+\\.\\w+", websiteCallback );
+        server.get("/[\\w+/]*[\\w-_%0-9]+\\.\\w+", websiteCallback);
 
         server.get("/test", (x, y) -> y.send("Server Running!"));
 
 
     }
+
     public String getWifiIp() {
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         int ip = wm != null ? wm.getConnectionInfo().getIpAddress() : 0;
 
         return ip != 0 ? Formatter.formatIpAddress(ip) + ":" + port : "No Wifi Address Found";
     }
+
     public String getHostIp() {
         return "192.168.43.1:" + port;
     }
 
 
     private HttpServerRequestCallback eventApiCallback = (request, response) -> {
-        // They sent the number of the last event they received.
-        // If we have more events than they've received, send them the missing ones.
-        // Otherwise, add them to the list of people waiting for events.
+        synchronized (this) {
 
-        // 1) get the event number they sent in their request path:
-        // this will be given to us as ?event={number}
-        int theirEventNumber = Integer.parseInt(request.getQuery().get("event").get(0));
-        Log.v(LOG_TAG, "RECIEVED EVENT REQUEST. NUM: " + theirEventNumber);
+            // They sent the number of the last event they received.
+            // If we have more events than they've received, send them the missing ones.
+            // Otherwise, add them to the list of people waiting for events.
 
-        if (theirEventNumber < this.events.size()) {
-            synchronized (this.events) {
+            // 1) get the event number they sent in their request path:
+            // this will be given to us as ?event={number}
+            int theirEventNumber = Integer.parseInt(request.getQuery().get("event").get(0));
+            Log.v(LOG_TAG, "RECIEVED EVENT REQUEST. NUM: " + theirEventNumber);
+
+            if (theirEventNumber < this.events.size()) {
                 // Build a JSON response containing all the events they've missed.
                 int difference = this.events.size() - theirEventNumber;
                 String[] eventsArray = new String[difference];
                 for (int i = theirEventNumber; i < this.events.size(); i++) {
                     eventsArray[i - theirEventNumber] = this.events.get(i);
                 }
-                response.send("[" + TextUtils.join(",", eventsArray) + "]");
-            }
+                response.setContentType("application/json; charset=utf-8");
 
-        } else {
-            synchronized (this.outstandingRequests) {
+                Log.v(LOG_TAG, "Responding to request immediately because they were missing events.");
+                Log.v(LOG_TAG, "[" + TextUtils.join(",", eventsArray) + "]");
+                response.send("[" + TextUtils.join(",", eventsArray) + "]");
+            } else {
+                // They already had all the events, wait until there's a new one
+                Log.v(LOG_TAG, "Adding request to queue.");
                 this.outstandingRequests.add(response);
             }
         }
     };
 
     HttpServerRequestCallback postEventApiCallback = (request, response) -> {
-        // IF they are registered in the current game session
-        // TODO: take latency into account for that user, use the input that comes first on the game.
-        // use this.selectCardsHandler
-        StringBody body = (StringBody)request.getBody();
+        synchronized (this) {
+            StringBody body = (StringBody) request.getBody();
 
-        String responseString = body.get();
-        synchronized (this.events) {
+            String responseString = body.get();
             events.add(responseString);
-        }
 
-        Log.v(LOG_TAG, responseString);
+            Log.v(LOG_TAG, "Responding to outstanding requests: " + outstandingRequests.size());
+            Log.v(LOG_TAG, "[" + responseString + "]");
 
-        synchronized (this.outstandingRequests) {
             for (AsyncHttpServerResponse otherResponse :
                     this.outstandingRequests) {
-                otherResponse.setContentType("application/json; charset=utf-16");
-                Log.v(LOG_TAG, "Responding to outstanding requests: " + outstandingRequests.size());
-                Log.v(LOG_TAG, "[" + responseString +"]");
-                otherResponse.send("[" + responseString +"]");
+                otherResponse.setContentType("application/json; charset=utf-8");
+                otherResponse.send("[" + responseString + "]");
             }
             this.outstandingRequests.clear();
-        }
 
-        response.send(responseString);
+            response.send(responseString);
+        }
     };
 
 
@@ -166,33 +168,34 @@ public class WebServerService extends Service {
         start();
         return START_STICKY;
     }
-/*
-    private void showNotification() {
-        Intent notificationIntent = new Intent(this, MultiPlayerLobbyActivity.class);
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                notificationIntent, 0);
+
+    /*
+        private void showNotification() {
+            Intent notificationIntent = new Intent(this, MultiPlayerLobbyActivity.class);
+            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                    notificationIntent, 0);
 
 
 
-        Bitmap icon = BitmapFactory.decodeResource(getResources(),
-                R.drawable.ic_launcher);
+            Bitmap icon = BitmapFactory.decodeResource(getResources(),
+                    R.drawable.ic_launcher);
 
-        Notification notification = new NotificationCompat.Builder(this)
-                .setContentTitle("Set Server is Running")
-                .setTicker("Set Server")
-                .setContentText("Set Server is Running")
-                .setSmallIcon(R.drawable.ic_launcher)
-                //.setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
-                .setContentIntent(pendingIntent)
-                .setOngoing(true)
-                .build();
-        startForeground(1,
-                notification);
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setContentTitle("Set Server is Running")
+                    .setTicker("Set Server")
+                    .setContentText("Set Server is Running")
+                    .setSmallIcon(R.drawable.ic_launcher)
+                    //.setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true)
+                    .build();
+            startForeground(1,
+                    notification);
 
-    }
-*/
+        }
+    */
     @Override
     public void onCreate() {
         super.onCreate();
@@ -210,6 +213,7 @@ public class WebServerService extends Service {
         Log.v(LOG_TAG, "in onRebind");
         super.onRebind(intent);
     }
+
     @Override
     public boolean onUnbind(Intent intent) {
         Log.v(LOG_TAG, "in onUnbind");
