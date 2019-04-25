@@ -14,6 +14,8 @@ import { Utilities } from "./utilities";
 
 // CARD_LIST  defined as global object in assets/cards.js, loaded by index.html before this is run.
 declare var CARD_LIST: CardInfo[];
+declare var STARTING_VILLAIN: string;
+
 // constants are set based on the size of the screen on start.
 constants.initialize();
 
@@ -22,6 +24,7 @@ constants.initialize();
 let useMock = false;
 let pastEvents: GameEvent[] = [];
 let players: Player[] = [];
+let serverUrl = 'http://' + window.location.host;
 
 // Use timestamp as id, it should be pretty unique. Used to identify player.
 // TODO: save in session storage?
@@ -73,7 +76,7 @@ let getEvent = async function (events: GameEvent[]) {
 
    console.log(`Sending Request for Event: ${events.length}`)
 
-   let url = "api/event/?event=" + events.length;
+   let url = serverUrl + "/api/event/?event=" + events.length;
    let response = await fetch(url).catch(obj => {
       console.log("error in fetch for getEvent")
       console.log(obj);
@@ -115,7 +118,7 @@ async function sendEvent(event: GameEvent) {
    if (useMock) {
       eventsMockedSet.push(event);
    } else {
-      await fetch('api/event/',
+      await fetch(serverUrl + '/api/event/',
          {
             method: 'POST',
             headers: {
@@ -283,13 +286,27 @@ draw5Trigger.element.addEventListener("touchend", () => {
       // TODO: host is also going to recieve these events. thats stupid but works.
       board.mainDeck.shuffle();
       // These need to send in the correct order. must await.
+      board.lineup.addCard(board.mainDeck.draw());
+      board.lineup.addCard(board.mainDeck.draw());
+      board.lineup.addCard(board.mainDeck.draw());
+      board.lineup.addCard(board.mainDeck.draw());
+      board.lineup.addCard(board.mainDeck.draw());
+      
       await sendEvent(new DeckShuffledEvent(
          null,
          board.mainDeck.id,
          Array.from(board.mainDeck.cards, (card) => card.id)
       ));
+
+      await sendEvent(new CardsMovedEvent(
+         null,
+         board.lineup.id,
+         Array.from(board.lineup.cards, card => card.id)
+      ))
+
+
       board.villains.shuffle();
-      board.villains.addCardToTop(board.villains.searchAndTake(constants.STARTING_VILLAIN));
+      board.villains.addCardToTop(board.villains.searchAndTake(STARTING_VILLAIN));
       await sendEvent(new DeckShuffledEvent(
          null,
          board.villains.id,
@@ -297,17 +314,6 @@ draw5Trigger.element.addEventListener("touchend", () => {
       ));
 
 
-      board.lineup.addCard(board.mainDeck.draw());
-      board.lineup.addCard(board.mainDeck.draw());
-      board.lineup.addCard(board.mainDeck.draw());
-      board.lineup.addCard(board.mainDeck.draw());
-      board.lineup.addCard(board.mainDeck.draw());
-
-      await sendEvent(new CardsMovedEvent(
-         null,
-         board.lineup.id,
-         Array.from(board.lineup.cards, card => card.id)
-      ))
 
       // Players dont exist yet, event for us.
       // Need to actually do this after the game start event, so useing a callback only defined here.
@@ -316,6 +322,11 @@ draw5Trigger.element.addEventListener("touchend", () => {
             // we shuffle
             player.deck.shuffle();
             player.drawHand();
+            sendEvent(new CardsMovedEvent(
+               null,
+               player.hand.id,
+               Array.from(player.hand.cards, card => card.id)
+            ))
             player.hand.adjustCards();
             sendEvent(new DeckShuffledEvent(
                null,
@@ -419,7 +430,7 @@ function touchStart(xy: Contact) {
    }
 
    setTimeout(() => {
-      if (firstContact && recentTouches[1] === xy && !isDrag) {
+      if (firstContact && cardClicked && recentTouches[1] === xy && !isDrag) {
          selectedCards.clear();
          addToSelected(...cardClicked.field.cards);
       }

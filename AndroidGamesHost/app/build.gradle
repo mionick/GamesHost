@@ -39,7 +39,7 @@ dependencies {
 // Custom task to copy assets folder on Build
 task myCopyToAssets(type: Copy) {
     def toDir = rootProject.file('app/src/main/assets')
-    from ("${rootProject.projectDir.parentFile.path.toString() + "\\CardGames\\MainSet\\dist"}")
+    from ("${rootProject.projectDir.parentFile.path.toString() + "\\CardGames\\dist"}")
     into toDir
 }
 preBuild.dependsOn myCopyToAssets

@@ -11,8 +11,8 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "buildForShip": "ng build --prod --output-hashing=none && npm run package",
-    "package": "npm run clean & tsc && browserify --debug -p tsify src\\basic-dc-game.ts -o dist\\main.js && echo D | xcopy .\\src\\assets .\\dist\\assets /E /Y && copy .\\src\\index.html .\\dist && copy .\\src\\styles.css .\\dist",
-    "clean": "rd /s /q dist"
+    "package": "npm run clean && browserify --debug -p tsify src\\basic-dc-game.ts -o ..\\dist\\basic\\main.js && echo D | xcopy .\\src\\assets ..\\dist\\basic\\assets /E /Y && copy .\\src\\mainset.html ..\\dist\\basic\\ && copy .\\src\\teentitans.html ..\\dist\\basic\\ && copy .\\src\\styles.css ..\\dist\\basic\\",
+    "clean": "rd /s /q ..\\dist\\basic\\"
   },
   "author": "Nicholas Mio",
   "license": "ISC",

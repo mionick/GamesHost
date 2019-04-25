@@ -32,7 +32,7 @@ public class WebServerService extends Service {
     private static String LOG_TAG = "WebServerService";
     private IBinder mBinder = new WebServiceBinder();
 
-    private final ArrayList<AsyncHttpServerResponse> outstandingRequests = new ArrayList<>(10);
+    private final ArrayList<AsyncHttpServerResponse> outstandingRequests = new ArrayList<>(50);
     private final ArrayList<String> events = new ArrayList<>(200);
 
 
@@ -69,7 +69,7 @@ public class WebServerService extends Service {
         server.post("/api/event/", postEventApiCallback);
 
         // Serve files like [a-z].[a-z]
-        server.get("/[\\w+/]*[\\w-_%0-9]+\\.\\w+", websiteCallback);
+        server.get("/[\\w+/-]*[\\w-_%0-9]+\\.\\w+", websiteCallback);
 
         server.get("/test", (x, y) -> y.send("Server Running!"));
 

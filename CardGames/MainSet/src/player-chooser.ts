@@ -33,7 +33,7 @@ export class PlayerChooser {
         this.element.appendChild(checkbox);
         this.element.appendChild(label);
 
-        includedPlayers.set(machineId, 0);
+        includedPlayers.set(machineId, heroes.cards[0].id);
     
         let heroChooser = this.getHeroChooser(heroes) as HTMLSelectElement;
         heroChooser.addEventListener("change", function (event) {

@@ -177,7 +177,7 @@ export class EventHandler {
         })
         // adjust after
         this.fieldIndex[evt.fieldToId].adjustCards();
-        this.cardIndex[0].field.adjustCards();
+        this.cardIndex[evt.cardIds[0]].field.adjustCards();
         this.gameLog.logEvent("");
     }
 
@@ -214,7 +214,7 @@ export class EventHandler {
         // Make sure host has not already been chosen.
         if (!this.hostMachineId) {
             this.hostMachineId = evt.machineId;
-            (document.getElementById("host-btn") as HTMLButtonElement).disabled = true;
+            (document.getElementById("host-btn") as HTMLButtonElement).style.visibility = "hidden";
             if (this.machineId === this.hostMachineId) {
                 // we are the host
                 this.hostSection.style.display = "block";

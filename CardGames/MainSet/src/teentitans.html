@@ -1,0 +1,41 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DC Main Deck</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="./assets/beardicon2.png">
+  <meta id="fixed-scroll" name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  
+
+  <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body id="body">
+  <div id="ui-wrapper">
+    <button id="previous-player" >&lt;</button>
+    <button id="next-player" >&gt;</button>
+  </div>
+  <div id="ui-wrapper2">
+     <p id="card-text">Tap a card to see it's text.</p>
+    <p id="vp-count">Tap Here To Count VP</p>
+    <textarea id="event-log" rows="4"></textarea>
+    <p id="event-message" class="outline">Register Below</p>
+  </div>
+  <div id="registration-page">
+    <input type="text" id="name-ipt" placeholder="Player Name (Non Empty)"/>
+    <button id="player-btn">Send Play Request</button>
+    <br />
+    <button id="host-btn">Become Host</button>
+    <div id="host-section">
+      <button id="start-btn">Start Game!</button>
+    </div>
+  </div>
+  <script src="assets/game-specifics/teen-titans-constants.js"></script>
+  <script src="assets/cards-tt.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
